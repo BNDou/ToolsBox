@@ -1,0 +1,20 @@
+DanceTime: 1680
+GameOverTime: 0
+QQServer:
+  Bind:
+    IP: 0.0.0.0
+    TcpPort: 27016
+  IP: 192.168.11.11
+  TcpPort: 27016
+Server:
+  Bind:
+    IP: 0.0.0.0
+    TcpPort: 27015
+    UdpPort: 27015
+  IP: 192.168.11.11
+  Model: tcp
+  Name: 自强不息艰苦奋斗
+  TcpPort: 27015
+  Title: 本软件仅用于学习目的，我们鼓励学习和研究，但不支持非法活动。一旦确认存在侵权行为，我们将立即删除侵权内容、停止提供服务
+  UdpPort: 27015
+SyncTime: 10000
