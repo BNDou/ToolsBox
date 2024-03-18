@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+'''
+Author       : BNDou
+Date         : 2024/3/19 0:41
+File         : SpeedServerClientUpdate/SpeedServerUpdate.py
+Description  :
+'''
 import os.path
 import socket
 import sys
