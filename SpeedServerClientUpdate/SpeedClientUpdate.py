@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 '''
 Author       : BNDou
-Date         : 2024/3/19 0:41
+Date         : 2024/3/19 21:43
 File         : SpeedServerClientUpdate/SpeedClientUpdate.py
 Description  :
 '''
@@ -25,21 +25,20 @@ if __name__ == "__main__":
     # 获取配置文件中的IP地址
     ServerInfo1_IP = conf.get('ServerInfo1', 'IP')
     ServerInfo1_Domain = conf.get('ServerInfo1', 'Domain')
-    print(f'IP={ServerInfo1_IP}\nDomain={ServerInfo1_Domain}')
 
     domain = ''  # 填写域名地址
 
-    print("\n1、IP开始获取")
+    print("\n1、最新IP开始获取")
     # 获取域名对应的IP地址
     myIp = socket.getaddrinfo(domain, 'http')[0][4][0]
 
     print("\n2、检查IP是否与配置文件中的IP相同")
 
     # 比较IP地址是否相同
-    if any(s == myIp for s in [str(ServerInfo1_IP), str(ServerInfo1_Domain)]):
-        print("IP相同，无需更新！\n【请手动关闭,或5秒后自动关闭】")
+    if myIp == str(ServerInfo1_IP) and domain == str(ServerInfo1_Domain):
+        print("    IP相同，无需更新！\n【请手动关闭,或5秒后自动关闭】")
     else:
-        print(f"最新IP={myIp}\nIP不同，需要更新\n\n3、修改IP到DirSvrInfo1.ini配置文件中")
+        print(f"    IP不同，需要更新\n\n3、修改IP到DirSvrInfo1.ini配置文件中")
         # 修改 ip 配置信息
         conf.set('ServerInfo1', 'IP', myIp)
         conf.set('ServerInfo1', 'Domain', domain)
