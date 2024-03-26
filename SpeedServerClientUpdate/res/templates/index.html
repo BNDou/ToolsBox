@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <title>Server Update Search</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th, td {
+            border: 2px solid #ccc;
+            padding: 8px;
+            text-align: left;
+            border-radius: 10px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        tr:hover {
+            background-color: #e0e0e0;
+        }
+
+        td:first-child {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+
+        button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 8px;
+        }
+
+        button:hover {
+            background-color: #3e8e41;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .center {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Server Update Search</h1>
+        <form action="/get_data" method="post">
+            <button type="submit">获取数据</button>
+        </form>
+        <h2>数据：</h2>
+        <table id="myTable">
+            <thead>
+                <tr>
+                    <th class="center">No.</th>
+                    <th>内容</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in data %}
+                    <tr>
+                        <td class="center">{{ loop.index }}</td>
+                        <td>{{ log }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        if ($("#myTable tbody tr").length > 0) {
+            $("#myTable").show();
+        } else {
+            $("#myTable").hide();
+        }
+    </script>
+</body>
+</html>

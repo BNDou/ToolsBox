@@ -7,6 +7,7 @@ Description  :
 '''
 import os.path
 import socket
+import subprocess
 import sys
 import time
 
@@ -61,7 +62,7 @@ if __name__ == "__main__":
                     break
         # 重启服务
         log += "启动服务\n"
-        os.system(os.path.join(curpath, "服务端.exe"))
+        subprocess.Popen(os.path.join(curpath, "服务端.exe"), shell=True)
 
         log += "更新完成！\n"
 
