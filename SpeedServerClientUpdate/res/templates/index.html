@@ -1,3 +1,10 @@
+<!--
+ * @Author: BNDou
+ * @Date: 2024-03-26 20:55:21
+ * @LastEditTime: 2024-04-17 04:08:39
+ * @FilePath: \ToolsBox\SpeedServerClientUpdate\res\templates\index.html
+ * @Description: 
+-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,6 +13,10 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <title>Server Update Search</title>
     <style>
+        form {
+            display: inline-block;
+        }
+
         body {
             font-family: Arial, sans-serif;
             background-color: #f2f2f2;
@@ -70,6 +81,14 @@
             background-color: #3e8e41;
         }
 
+        button.restart-btn {
+            background-color: #fd3e3e;
+        }
+
+        button.restart-btn:hover {
+            background-color: red;
+        }
+
         h1 {
             font-size: 24px;
             font-weight: bold;
@@ -87,7 +106,10 @@
         <form action="/get_data" method="post">
             <button type="submit">获取数据</button>
         </form>
-        <h2>数据：</h2>
+        <form action="/restart" method="post">
+            <button type="submit" class="restart-btn">重启服务端</button>
+        </form>
+        <h2>返回数据：</h2>
         <table id="myTable">
             <thead>
                 <tr>
