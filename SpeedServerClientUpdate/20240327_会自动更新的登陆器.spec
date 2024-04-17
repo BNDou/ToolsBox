@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['SpeedServerClientUpdate\\SpeedClientUpdate.py'],
+    ['SpeedClientUpdate.py'],
     pathex=[],
     binaries=[],
     datas=[],
@@ -34,5 +34,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['SpeedServerClientUpdate\\SpeedDog.ico'],
+    icon=['SpeedDog.ico'],
 )

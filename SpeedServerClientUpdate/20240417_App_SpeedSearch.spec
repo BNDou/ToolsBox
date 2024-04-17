@@ -2,10 +2,10 @@
 
 
 a = Analysis(
-    ['SpeedServerClientUpdate\\SpeedSearch.py'],
+    ['SpeedSearch.py'],
     pathex=[],
     binaries=[],
-    datas=[('SpeedServerClientUpdate/res','.')],
+    datas=[('res','.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -34,5 +34,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['SpeedServerClientUpdate\\SpeedDog.ico'],
+    icon=['SpeedDog.ico'],
 )
