@@ -1,7 +1,7 @@
 '''
 Author: BNDou
 Date: 2024-03-27 00:05:06
-LastEditTime: 2024-04-17 05:32:12
+LastEditTime: 2024-04-17 13:29:17
 FilePath: \ToolsBox\SpeedServerClientUpdate\SpeedSearch.py
 Description: 
 '''
@@ -77,7 +77,7 @@ def update():
     log.append(f"配置文件中ServerIP={ServerIP}")
     log.append(f"配置文件中QQServerIP={QQServerIP}")
 
-    domain = ''  # 填写域名地址
+    domain = 'bndou.top'  # 填写域名地址
     myIP = socket.getaddrinfo(domain, 'http')[0][4][0]
     log.append(f'最新IP={myIP}')
 

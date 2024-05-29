@@ -1,0 +1,170 @@
+<!--
+ * @Author: BNDou
+ * @Date: 2024-04-06 20:44:47
+ * @LastEditTime: 2024-05-30 01:20:01
+ * @FilePath: \ToolsBox\QQOnline\res\templates\index.html
+ * @Description: 
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <title>QQ Online Process</title>
+    <style>
+        form {
+            display: inline-block;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th, td {
+            border: 2px solid #ccc;
+            padding: 8px;
+            text-align: left;
+            border-radius: 10px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        tr:hover {
+            background-color: #e0e0e0;
+        }
+
+        td:first-child {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+
+        button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 8px;
+        }
+
+        button:hover {
+            background-color: #3e8e41;
+        }
+
+        button.login-btn {
+            background-color: rgb(111, 111, 245);
+        }
+
+        button.login-btn:hover {
+            background-color: blue;
+        }
+
+        button.restart-btn {
+            background-color: #f85555;
+        }
+
+        button.restart-btn:hover {
+            background-color: red;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .center {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>QQ Online Process</h1>
+        <form action="/get_online_info" method="post">
+            <button type="submit">获取在线信息</button>
+        </form>
+        <form action="/quit" method="post">
+            <button type="submit" class="restart-btn">全部退出</button>
+        </form>
+        <form action="/open_qq" method="post">
+            <button type="submit" class="login-btn" onclick="showAlert(1)">①打开QQ</button>
+        </form>
+        <form action="/click_dropdown" method="post">
+            <button type="submit" class="login-btn" onclick="showAlert(2)">②下拉列表</button>
+        </form>
+        <form action="/select_account" method="post">
+            <button type="submit" class="login-btn" onclick="showAlert(3)">③选择账号</button>
+        </form>
+        <form action="/click_login" method="post">
+            <button type="submit" class="login-btn" onclick="showAlert(4)">④登录</button>
+        </form>
+        <h2>返回数据：</h2>
+        <table id="myTable">
+            <thead>
+                <tr>
+                    <th class="center">No.</th>
+                    <th>内容</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in data %}
+                    <tr>
+                        <td class="center">{{ loop.index }}</td>
+                        <td>{{ log }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        function showAlert(i) {
+            if (i === 1) {
+                alert("①打开QQ大约需要1~3秒不等，请耐心等待！");
+            } else if (i === 2) {
+                alert("②下拉列表大约需要1~3秒不等，请耐心等待！");
+            } else if (i === 3) {
+                alert("③选择账号大约需要1~3秒不等，请耐心等待！");
+            }else  if (i === 4) {
+                alert("④登录大约需要20~30秒不等，请耐心等待！");
+            }
+        }
+        if ($("#myTable tbody tr").length > 0) {
+            $("#myTable").show();
+        } else {
+            $("#myTable").hide();
+        }
+    </script>
+</body>
+</html>
