@@ -1,7 +1,7 @@
 <!--
  * @Author: BNDou
  * @Date: 2024-04-06 20:44:47
- * @LastEditTime: 2024-05-30 01:20:01
+ * @LastEditTime: 2024-05-30 02:55:59
  * @FilePath: \ToolsBox\QQOnline\res\templates\index.html
  * @Description: 
 -->
@@ -10,8 +10,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="icon" href="QQOnline.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="QQOnline.ico" type="image/x-icon">
     <title>QQ Online Process</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         form {
             display: inline-block;
@@ -117,6 +119,7 @@
         <form action="/quit" method="post">
             <button type="submit" class="restart-btn">全部退出</button>
         </form>
+        <br>
         <form action="/open_qq" method="post">
             <button type="submit" class="login-btn" onclick="showAlert(1)">①打开QQ</button>
         </form>
