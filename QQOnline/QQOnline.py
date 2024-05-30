@@ -1,19 +1,20 @@
 '''
 Author: BNDou
 Date: 2024-05-29 21:14:48
-LastEditTime: 2024-05-30 02:24:18
+LastEditTime: 2024-05-30 16:34:58
 FilePath: \ToolsBox\QQOnline\QQOnline.py
 Description: 
 '''
 import os
 import os.path
+import subprocess
 import time
 
 import win32api as api
 import pyautogui
 import psutil
 from apscheduler.schedulers.background import BackgroundScheduler
-from flask import Flask, render_template
+from flask import Flask, request, render_template
 
 app = Flask(__name__)
 scheduler = BackgroundScheduler()
@@ -47,70 +48,43 @@ def quit():
             if os.name == 'nt':  # Windows系统
                 if "--from-multiple-login" in proc.cmdline():
                     proc_log.append(
-                        f"✔️进程id：{proc.pid} QQ号：{proc.cmdline()[-1]} 退出登录")
+                        f"✅ 进程id: {proc.pid} QQ号: {proc.cmdline()[-1]} 退出登录")
                     cmd = f'taskkill /pid {str(proc.pid)} /f'
                     try:
                         os.system(cmd)
+                        time.sleep(1)
                     except Exception as e:
                         proc_log.append(e)
     return render_template(
         'index.html',
-        data=(proc_log if len(proc_log) > 0 else ["❌未发现可退出登录的QQ号"]))
+        data=(proc_log if len(proc_log) > 0 else ["❌ 未发现可退出登录的QQ号"]))
 
 
-@app.route('/open_qq', methods=['POST'])
-def open_qq():
-    '''
-    打开QQ
-    '''
-    qq = "C:\Program Files\Tencent\QQNT\QQ.exe"
-    api.ShellExecute(0, "open", qq, None, None, 1)
-    time.sleep(3)
-    return render_template('index.html', data=["✔️打开QQ"])
-
-
-@app.route('/click_dropdown', methods=['POST'])
-def click_dropdown():
-    '''
-    点击下拉列表
-    '''
-    try:
-        login = pyautogui.locateOnScreen("templates\login.png")
-        Center = pyautogui.center(login)
-        pyautogui.click(Center.x + 30, Center.y - 70)
-        return render_template('index.html', data=["✔️点击下拉列表"])
-    except Exception as e:
-        return render_template('index.html', data=["❌ERROR:未找到下拉按钮"])
-
-
-@app.route('/select_account', methods=['POST'])
-def select_account():
-    '''
-    选择登录的账号
-    '''
-    try:
-        login = pyautogui.locateOnScreen("templates\login.png")
-        Center = pyautogui.center(login)
-        pyautogui.click(Center.x, Center.y - 200)
-        time.sleep(1)
-        pyautogui.click(Center.x + 80, Center.y - 200)
-        return render_template('index.html', data=["✔️选择登录的账号"])
-    except Exception as e:
-        return render_template('index.html', data=["❌ERROR:未找到账号头像"])
-
-
-@app.route('/click_login', methods=['POST'])
-def click_login():
+@app.route('/login', methods=['POST'])
+def login():
     '''
     点击登录
     '''
+    qq_number = request.form.get('qqNumberInput')
+    login_cmd = (
+        '"C:\Program Files\Tencent\QQNT\QQ.exe" '
+        '"C:\Program Files\Tencent\QQNT\resources\app\versions\9.9.10\application\background.js" '
+        '--from-multiple-login ' + qq_number)
     try:
-        login = pyautogui.locateOnScreen("templates\login.png")
-        pyautogui.click(pyautogui.center(login))
-        time.sleep(20)
-        return render_template('index.html', data=["✔️点击登录"])
+        p = subprocess.Popen(login_cmd, shell=True)
+
+        while p.poll() is None:
+            time.sleep(8)
+            for proc in psutil.process_iter():
+                if proc.name() == "QQ.exe":
+                    if os.name == "nt":  # Windows系统
+                        if qq_number in proc.cmdline():
+                            return render_template(
+                                'index.html', data=[f"✅ 进程ID: {proc.pid} QQ号: {qq_number} 登录成功"])
+            pass
+        return render_template('index.html', data=[f"❌ {qq_number} 登录失败"])
     except Exception as e:
-        return render_template('index.html', data=["❌ERROR:未找到登录按钮"])
+        return render_template('index.html', data=[f"❌ {qq_number} 登录失败: {e}"])
 
 
 def getTaskProcess():
@@ -123,10 +97,10 @@ def getTaskProcess():
             if os.name == "nt":  # Windows系统
                 if "--from-multiple-login" in proc.cmdline():
                     proc_log.append(
-                        f"✔️进程id：{proc.pid} QQ号：{proc.cmdline()[-1]} 在线中······"
-                    )
-    return proc_log if len(proc_log) > 0 else ["❌未发现在线的QQ号"]
+                        f"✅ 进程id: {proc.pid} QQ号: {proc.cmdline()[-1]} 在线中······")
+    return proc_log if len(proc_log) > 0 else ["❌ 未发现在线的QQ号"]
 
 
 if __name__ == '__main__':
     app.run(host="192.168.31.120", port=1314, debug=False)
+    # app.run(host="127.0.0.1", port=1314, debug=True)

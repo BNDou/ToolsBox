@@ -1,7 +1,7 @@
 <!--
  * @Author: BNDou
  * @Date: 2024-04-06 20:44:47
- * @LastEditTime: 2024-05-30 03:09:07
+ * @LastEditTime: 2024-05-30 16:34:48
  * @FilePath: \ToolsBox\QQOnline\res\templates\index.html
  * @Description: 
 -->
@@ -97,6 +97,37 @@
         button.restart-btn:hover {
             background-color: red;
         }
+        
+        input {
+            -webkit-appearance: none;
+            appearance: none;
+            border: 2px solid blue;
+            border-radius: 8px;
+            background-color: #f2f2f2;
+            padding: 10px 10px;
+            font-size: 16px;
+            margin: 4px 2px;
+            color: blue;
+            cursor: pointer;
+        }
+
+        input:hover {
+            background-color: #e0e0e0;
+        }
+
+        #message {
+            border: 2px solid yellow;
+            border-radius: 8px;
+            background-color: #e0e0e0;
+            color: red;
+            padding: 10px 20px;
+            text-align: center;
+            border-radius: 8px;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+        }
 
         h1 {
             font-size: 24px;
@@ -119,18 +150,12 @@
             <button type="submit" class="restart-btn">全部退出</button>
         </form>
         <br>
-        <form action="/open_qq" method="post">
-            <button type="submit" class="login-btn" onclick="showAlert(1)">①打开QQ</button>
+        <form action="/login" method="post" onsubmit="return validateForm();">
+            <input type="text" id="qqNumberInput" name="qqNumberInput" placeholder="请输入登录或退出的QQ号" class="input-style">
+            <button type="submit" class="login-btn">登录</button>
         </form>
-        <form action="/click_dropdown" method="post">
-            <button type="submit" class="login-btn" onclick="showAlert(2)">②下拉列表</button>
-        </form>
-        <form action="/select_account" method="post">
-            <button type="submit" class="login-btn" onclick="showAlert(3)">③选择账号</button>
-        </form>
-        <form action="/click_login" method="post">
-            <button type="submit" class="login-btn" onclick="showAlert(4)">④登录</button>
-        </form>
+        <br>
+        <div id="message">说明: 登录前请填写QQ号！</div>
         <h2>返回数据：</h2>
         <table id="myTable">
             <thead>
@@ -151,17 +176,31 @@
     </div>
 
     <script>
-        function showAlert(i) {
-            if (i === 1) {
-                alert("①打开QQ大约需要1~3秒不等，请耐心等待！");
-            } else if (i === 2) {
-                alert("②下拉列表大约需要1~3秒不等，请耐心等待！");
-            } else if (i === 3) {
-                alert("③选择账号大约需要1~3秒不等，请耐心等待！");
-            }else  if (i === 4) {
-                alert("④登录大约需要20~30秒不等，请耐心等待！");
+        // 检查是否有数据
+        function validateForm() {
+            var qqNumberInput = document.getElementById("qqNumberInput");
+            if (qqNumberInput.value.trim() === "") {
+                alert("QQ 号不能为空！");
+                return false;
             }
+            alert("登录QQ大约需要6~10秒，请耐心等待！");
+            countdown();
+            return true;
         }
+
+        // 倒计时
+        function countdown() {
+            var seconds = 8;
+            var timer = setInterval(function() {
+                document.getElementById("message").innerHTML = "请耐心等待 " + seconds + " 秒后显示结果";
+                seconds--;
+                if (seconds < 0) {
+                    clearInterval(timer);
+                }
+            }, 1000);
+        }
+
+        // 显示或隐藏表格
         if ($("#myTable tbody tr").length > 0) {
             $("#myTable").show();
         } else {
