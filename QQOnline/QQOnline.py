@@ -1,7 +1,7 @@
 '''
 Author: BNDou
 Date: 2024-05-29 21:14:48
-LastEditTime: 2024-05-31 06:27:04
+LastEditTime: 2024-05-31 06:55:47
 FilePath: \ToolsBox\QQOnline\QQOnline.py
 Description: 
 '''
@@ -9,7 +9,6 @@ import json
 import os
 import os.path
 import subprocess
-import sys
 import time
 
 import psutil
@@ -25,11 +24,11 @@ def index():
     '''
     主页
     '''
-    with open(
-            os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),
-                         "templates\config.json"),
-            encoding="utf-8",
-    ) as f:
+    # 获取当前脚本的绝对路径，获取配置文件的路径
+    config_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                    "templates", "config.json")
+    # 读取配置文件
+    with open(config_file_path, encoding="utf-8") as f:
         config = json.loads(f.read())
     version = config.get('version')
     return render_template('index.html', version=version)
@@ -166,11 +165,11 @@ def is_Owner(role, account, password):
     :param password: 密码
     :return: 是否为所属者
     '''
-    with open(
-            os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),
-                         "templates\config.json"),
-            encoding="utf-8",
-    ) as f:
+    # 获取当前脚本的绝对路径，获取配置文件的路径
+    config_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                    "templates", "config.json")
+    # 读取配置文件
+    with open(config_file_path, encoding="utf-8") as f:
         config = json.loads(f.read())
     datas = config.get(role)
 
