@@ -1,7 +1,7 @@
 '''
 Author: BNDou
 Date: 2024-05-29 21:14:48
-LastEditTime: 2024-05-31 06:55:47
+LastEditTime: 2024-05-31 07:09:52
 FilePath: \ToolsBox\QQOnline\QQOnline.py
 Description: 
 '''
@@ -24,13 +24,6 @@ def index():
     '''
     主页
     '''
-    # 获取当前脚本的绝对路径，获取配置文件的路径
-    config_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                    "templates", "config.json")
-    # 读取配置文件
-    with open(config_file_path, encoding="utf-8") as f:
-        config = json.loads(f.read())
-    version = config.get('version')
     return render_template('index.html', version=version)
 
 
@@ -40,7 +33,7 @@ def get_online_info():
     获取在线QQ号
     '''
     log = getTaskProcess()
-    return render_template('index.html', data=log)
+    return render_template('index.html', version=version, data=log)
 
 
 @app.route('/exit_all', methods=['POST'])
@@ -53,7 +46,9 @@ def exit_all():
     adminAccount = request.form.get('adminAccount')
     adminPassword = request.form.get('adminPassword')
     if not is_Owner("Administrator", adminAccount, adminPassword):
-        return render_template('index.html', data=["❌ 非管理员用户，无权退出全部QQ登录！"])
+        return render_template('index.html',
+                               version=version,
+                               data=["❌ 非管理员用户，无权退出全部QQ登录！"])
     else:
         log.append(f"✅ 管理员用户: {adminAccount} 申请退出全部QQ登录！")
 
@@ -72,6 +67,7 @@ def exit_all():
                     except Exception as e:
                         proc_log.append(e)
     return render_template('index.html',
+                           version=version,
                            data=((log + proc_log) if len(proc_log) > 0 else
                                  (log + ["❌ 未发现可退出登录的QQ号"])))
 
@@ -87,6 +83,7 @@ def exit_qq():
     qqPassword = request.form.get('qqPassword')
     if not is_Owner("QQOnline", qqAccount, qqPassword):
         return render_template('index.html',
+                               version=version,
                                data=[f"❌ QQ号: {qqAccount} 非号主无权限退出登录！"])
     else:
         log.append(f"✅ QQ号: {qqAccount} 号主申请退出登录！")
@@ -107,6 +104,7 @@ def exit_qq():
                     except Exception as e:
                         proc_log.append(e)
     return render_template('index.html',
+                           version=version,
                            data=((log + proc_log) if len(proc_log) > 0 else
                                  (log + ["❌ 未发现该QQ号在线！"])))
 
@@ -132,13 +130,18 @@ def login():
                         if qq_number in proc.cmdline():
                             return render_template(
                                 'index.html',
+                                version=version,
                                 data=[
                                     f"✅ QQ号: {qq_number} 进程ID: {proc.pid} 登录成功"
                                 ])
             pass
-        return render_template('index.html', data=[f"❌ {qq_number} 登录失败"])
+        return render_template('index.html',
+                               version=version,
+                               data=[f"❌ {qq_number} 登录失败"])
     except Exception as e:
-        return render_template('index.html', data=[f"❌ {qq_number} 登录失败: {e}"])
+        return render_template('index.html',
+                               version=version,
+                               data=[f"❌ {qq_number} 登录失败: {e}"])
 
 
 def getTaskProcess():
@@ -180,6 +183,21 @@ def is_Owner(role, account, password):
     return False
 
 
+def version():
+    '''
+    获取版本信息
+    '''
+    global version
+    # 获取当前脚本的绝对路径，获取配置文件的路径
+    config_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                    "templates", "config.json")
+    # 读取配置文件
+    with open(config_file_path, encoding="utf-8") as f:
+        config = json.loads(f.read())
+    version = config.get('version')
+
+
 if __name__ == '__main__':
-    app.run(host="192.168.31.120", port=1314, debug=False)
-    # app.run(host="127.0.0.1", port=1314, debug=True)
+    version()
+    # app.run(host="192.168.31.120", port=1314, debug=False)
+    app.run(host="127.0.0.1", port=1314, debug=True)
