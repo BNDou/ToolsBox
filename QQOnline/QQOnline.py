@@ -1,17 +1,17 @@
 '''
 Author: BNDou
 Date: 2024-05-29 21:14:48
-LastEditTime: 2024-05-30 16:34:58
+LastEditTime: 2024-05-31 06:27:04
 FilePath: \ToolsBox\QQOnline\QQOnline.py
 Description: 
 '''
+import json
 import os
 import os.path
 import subprocess
+import sys
 import time
 
-import win32api as api
-import pyautogui
 import psutil
 from apscheduler.schedulers.background import BackgroundScheduler
 from flask import Flask, request, render_template
@@ -25,7 +25,14 @@ def index():
     '''
     主页
     '''
-    return render_template('index.html')
+    with open(
+            os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),
+                         "templates\config.json"),
+            encoding="utf-8",
+    ) as f:
+        config = json.loads(f.read())
+    version = config.get('version')
+    return render_template('index.html', version=version)
 
 
 @app.route('/get_online_info', methods=['POST'])
@@ -37,27 +44,72 @@ def get_online_info():
     return render_template('index.html', data=log)
 
 
-@app.route('/quit', methods=['POST'])
-def quit():
+@app.route('/exit_all', methods=['POST'])
+def exit_all():
     '''
-    退出登录
+    退出全部账号
     '''
-    proc_log = []
+    log, proc_log = [], []
+    # 判断是否为管理员权限
+    adminAccount = request.form.get('adminAccount')
+    adminPassword = request.form.get('adminPassword')
+    if not is_Owner("Administrator", adminAccount, adminPassword):
+        return render_template('index.html', data=["❌ 非管理员用户，无权退出全部QQ登录！"])
+    else:
+        log.append(f"✅ 管理员用户: {adminAccount} 申请退出全部QQ登录！")
+
+    # 获取QQ进程
     for proc in psutil.process_iter():
         if proc.name() == "QQ.exe":
             if os.name == 'nt':  # Windows系统
                 if "--from-multiple-login" in proc.cmdline():
                     proc_log.append(
-                        f"✅ 进程id: {proc.pid} QQ号: {proc.cmdline()[-1]} 退出登录")
+                        f"✅ QQ号: {proc.cmdline()[-1]} 进程id: {proc.pid} 退出登录")
+                    # 杀死进程
                     cmd = f'taskkill /pid {str(proc.pid)} /f'
                     try:
                         os.system(cmd)
                         time.sleep(1)
                     except Exception as e:
                         proc_log.append(e)
-    return render_template(
-        'index.html',
-        data=(proc_log if len(proc_log) > 0 else ["❌ 未发现可退出登录的QQ号"]))
+    return render_template('index.html',
+                           data=((log + proc_log) if len(proc_log) > 0 else
+                                 (log + ["❌ 未发现可退出登录的QQ号"])))
+
+
+@app.route('/exit_qq', methods=['POST'])
+def exit_qq():
+    '''
+    退出指定QQ
+    '''
+    log, proc_log = [], []
+    # 判断是否为QQ号主人权限
+    qqAccount = request.form.get('qqAccount')
+    qqPassword = request.form.get('qqPassword')
+    if not is_Owner("QQOnline", qqAccount, qqPassword):
+        return render_template('index.html',
+                               data=[f"❌ QQ号: {qqAccount} 非号主无权限退出登录！"])
+    else:
+        log.append(f"✅ QQ号: {qqAccount} 号主申请退出登录！")
+
+    # 获取QQ进程
+    for proc in psutil.process_iter():
+        if proc.name() == "QQ.exe":
+            if os.name == 'nt':  # Windows系统
+                if all(value in proc.cmdline()
+                       for value in ["--from-multiple-login", qqAccount]):
+                    proc_log.append(
+                        f"✅ QQ号: {proc.cmdline()[-1]} 进程id: {proc.pid} 退出登录")
+                    # 杀死进程
+                    cmd = f'taskkill /pid {str(proc.pid)} /f'
+                    try:
+                        os.system(cmd)
+                        time.sleep(1)
+                    except Exception as e:
+                        proc_log.append(e)
+    return render_template('index.html',
+                           data=((log + proc_log) if len(proc_log) > 0 else
+                                 (log + ["❌ 未发现该QQ号在线！"])))
 
 
 @app.route('/login', methods=['POST'])
@@ -80,7 +132,10 @@ def login():
                     if os.name == "nt":  # Windows系统
                         if qq_number in proc.cmdline():
                             return render_template(
-                                'index.html', data=[f"✅ 进程ID: {proc.pid} QQ号: {qq_number} 登录成功"])
+                                'index.html',
+                                data=[
+                                    f"✅ QQ号: {qq_number} 进程ID: {proc.pid} 登录成功"
+                                ])
             pass
         return render_template('index.html', data=[f"❌ {qq_number} 登录失败"])
     except Exception as e:
@@ -97,8 +152,33 @@ def getTaskProcess():
             if os.name == "nt":  # Windows系统
                 if "--from-multiple-login" in proc.cmdline():
                     proc_log.append(
-                        f"✅ 进程id: {proc.pid} QQ号: {proc.cmdline()[-1]} 在线中······")
+                        f"✅ QQ号: {proc.cmdline()[-1]} 进程id: {proc.pid} 在线中······"
+                    )
     return proc_log if len(proc_log) > 0 else ["❌ 未发现在线的QQ号"]
+
+
+def is_Owner(role, account, password):
+    '''
+    判断是否为所属者
+    
+    :param role: 角色
+    :param account: 用户名
+    :param password: 密码
+    :return: 是否为所属者
+    '''
+    with open(
+            os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),
+                         "templates\config.json"),
+            encoding="utf-8",
+    ) as f:
+        config = json.loads(f.read())
+    datas = config.get(role)
+
+    # 判断用户名和密码是否在 角色 所属下
+    for data in datas:
+        if account == data['user'] and password == data['pwd']:
+            return True
+    return False
 
 
 if __name__ == '__main__':

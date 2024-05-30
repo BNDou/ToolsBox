@@ -156,3 +156,4 @@ cython_debug/
 .idea/modules.xml
 .idea/ToolsBox.iml
 .idea/vcs.xml
+QQOnline/templates/config.json
