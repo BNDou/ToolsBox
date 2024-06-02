@@ -1,0 +1,287 @@
+<!--
+ * @Author: BNDou
+ * @Date: 2024-04-06 20:44:47
+ * @LastEditTime: 2024-05-31 06:00:56
+ * @FilePath: \ToolsBox\QQOnline\templates\index.html
+ * @Description: 
+-->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="https://cdn.bndou.eu.org/gh/BNDou/ToolsBox/QQOnline/QQOnline.ico" type="image/x-icon">
+    <title>QQ Online Process</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        form {
+            display: inline-block;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th,
+        td {
+            border: 2px solid #ccc;
+            padding: 8px;
+            text-align: left;
+            border-radius: 10px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        tr:hover {
+            background-color: #e0e0e0;
+        }
+
+        td:first-child {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+
+        button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 8px;
+        }
+
+        button:hover {
+            background-color: #3e8e41;
+        }
+
+        button.login-btn {
+            background-color: rgb(111, 111, 245);
+        }
+
+        button.login-btn:hover {
+            background-color: blue;
+        }
+
+        button.exit-btn {
+            background-color: #f85555;
+        }
+
+        button.exit-btn:hover {
+            background-color: red;
+        }
+
+        input {
+            -webkit-appearance: none;
+            appearance: none;
+            border: 2px solid blue;
+            border-radius: 8px;
+            background-color: #f2f2f2;
+            padding: 10px 10px;
+            font-size: 16px;
+            margin: 4px 2px;
+            color: blue;
+            cursor: pointer;
+        }
+
+        input:hover {
+            background-color: #e0e0e0;
+        }
+
+        #message {
+            border: 2px solid yellow;
+            border-radius: 8px;
+            background-color: #e0e0e0;
+            color: red;
+            padding: 10px 20px;
+            text-align: center;
+            border-radius: 8px;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+        }
+
+        #adminWindow,
+        #qqWindow {
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(200, 200, 200, 0.5);
+            z-index: 9999;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        h5 {
+            position: absolute;
+            text-align: left;
+            top: 0;
+        }
+
+        .center {
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h5>Version: {{ version }}</h5>
+        <h1>Online Process</h1>
+        <form action="/get_online_info" method="post">
+            <button type="submit">获取在线信息</button>
+        </form>
+        <button class="exit-btn" onclick="clearData('admin')">全部退出</button>
+        <button class="exit-btn" onclick="clearData('qq')">退出指定QQ</button>
+        <br />
+        <form action="/login" method="post" onsubmit="return login_validateForm();">
+            <input type="text" id="qqNumberInput" name="qqNumberInput" placeholder="请输入登录或退出的QQ号" class="input-style">
+            <button type="submit" class="login-btn">登录</button>
+        </form>
+        <br />
+        <div id="message">说明: 登录前请填写QQ号！</div>
+        <h2>返回数据：</h2>
+        <table id="myTable">
+            <thead>
+                <tr>
+                    <th class="center">No.</th>
+                    <th>内容</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in data %}
+                <tr>
+                    <td class="center">{{ loop.index }}</td>
+                    <td>{{ log }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div id="adminWindow" style="display: none;">
+        <form action="/exit_all" method="post"
+            style="background-color: #e0e0e0; border: 2px solid blue; border-radius: 8px; margin: 10px; text-align: center;"
+            onsubmit="return exit_validateForm('admin');">
+            <span>管理员账号：</span>
+            <input type="text" id="adminAccount" name="adminAccount" placeholder="请输入管理员账号" />
+            <br />
+            <span>管理员密码：</span>
+            <input type="password" id="adminPassword" name="adminPassword" placeholder="请输入管理员密码" />
+            <br />
+            <button class="exit-btn" onclick="adminWindow.style.display = 'none';return false;">取消</button>
+            <button type="submit">确认</button>
+        </form>
+    </div>
+    <div id="qqWindow" style="display: none;">
+        <form action="/exit_qq" method="post"
+            style="background-color: #e0e0e0; border: 2px solid blue; border-radius: 8px; margin: 10px; text-align: center;"
+            onsubmit="return exit_validateForm('qq');">
+            <span>QQ账号：</span>
+            <input type="text" id="qqAccount" name="qqAccount" placeholder="请输入QQ账号" />
+            <br />
+            <span>QQ密码：</span>
+            <input type="password" id="qqPassword" name="qqPassword" placeholder="请输入QQ密码" />
+            <br />
+            <button class="exit-btn" onclick="qqWindow.style.display = 'none';return false;">取消</button>
+            <button type="submit">确认</button>
+        </form>
+    </div>
+
+    <script>
+        // 清空输入行的内容
+        function clearData(s) {
+            $("#" + s + "Account").val("");
+            $("#" + s + "Password").val("");
+            $("#" + s + "Window").show();
+        }
+
+        // 检查退出是否有数据
+        function exit_validateForm(s) {
+            // 获取输入的账号和密码
+            var account = $("#" + s + "Account").val();
+            var password = $("#" + s + "Password").val();
+
+            // 判断账号和密码是否为空
+            if (account === '' || password === '') {
+                alert('账号和密码不能为空！');
+                return false;
+            }
+
+            // 隐藏悬浮窗口
+            $("#" + s + "Window").hide();
+            return true;
+        }
+
+        // 检查登录是否有数据
+        function login_validateForm() {
+            var qqNumberInput = $("#qqNumberInput");
+            if (qqNumberInput.val().trim() === "") {
+                alert("QQ 号不能为空！");
+                return false;
+            }
+            alert("登录QQ大约需要6~10秒，请耐心等待！");
+            countdown();
+            return true;
+        }
+
+        // 倒计时
+        function countdown() {
+            var seconds = 8;
+            var timer = setInterval(function () {
+                $("#message").text("请耐心等待 " + seconds + " 秒后显示结果");
+                seconds--;
+                if (seconds < 0) {
+                    clearInterval(timer);
+                    $("#message").text("");
+                }
+            }, 1000);
+        }
+
+        // 显示或隐藏表格
+        if ($("#myTable tbody tr").length > 0) {
+            $("#myTable").show();
+        } else {
+            $("#myTable").hide();
+        }
+    </script>
+</body>
+
+</html>

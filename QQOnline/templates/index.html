@@ -1,228 +1,154 @@
 <!--
  * @Author: BNDou
  * @Date: 2024-04-06 20:44:47
- * @LastEditTime: 2024-05-31 06:00:56
+ * @LastEditTime: 2024-06-02 09:27:45
  * @FilePath: \ToolsBox\QQOnline\templates\index.html
  * @Description: 
 -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh" data-theme="light">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="https://cdn.bndou.eu.org/gh/BNDou/ToolsBox/QQOnline/QQOnline.ico" type="image/x-icon">
-    <title>QQ Online Process</title>
+    <title>QQ Process Online</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.11.1/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <style>
-        form {
-            display: inline-block;
-        }
-
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f2f2f2;
-            margin: 0;
-            padding: 0;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            margin-bottom: 20px;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        th,
-        td {
-            border: 2px solid #ccc;
-            padding: 8px;
-            text-align: left;
-            border-radius: 10px;
-        }
-
-        th {
-            background-color: #f2f2f2;
-            font-weight: bold;
-        }
-
-        tr:nth-child(even) {
-            background-color: #f2f2f2;
-        }
-
-        tr:hover {
-            background-color: #e0e0e0;
-        }
-
-        td:first-child {
-            background-color: #f2f2f2;
-            font-weight: bold;
-        }
-
-        button {
-            background-color: #4CAF50;
-            border: none;
-            color: white;
-            padding: 10px 20px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 16px;
-            margin: 4px 2px;
-            cursor: pointer;
-            border-radius: 8px;
-        }
-
-        button:hover {
-            background-color: #3e8e41;
-        }
-
-        button.login-btn {
-            background-color: rgb(111, 111, 245);
-        }
-
-        button.login-btn:hover {
-            background-color: blue;
-        }
-
-        button.exit-btn {
-            background-color: #f85555;
-        }
-
-        button.exit-btn:hover {
-            background-color: red;
-        }
-
-        input {
-            -webkit-appearance: none;
-            appearance: none;
-            border: 2px solid blue;
-            border-radius: 8px;
-            background-color: #f2f2f2;
-            padding: 10px 10px;
-            font-size: 16px;
-            margin: 4px 2px;
-            color: blue;
-            cursor: pointer;
-        }
-
-        input:hover {
-            background-color: #e0e0e0;
-        }
-
-        #message {
-            border: 2px solid yellow;
-            border-radius: 8px;
-            background-color: #e0e0e0;
-            color: red;
-            padding: 10px 20px;
-            text-align: center;
-            border-radius: 8px;
-            display: inline-block;
-            font-size: 16px;
-            margin: 4px 2px;
-            cursor: pointer;
-        }
-
-        #adminWindow,
-        #qqWindow {
-            display: block;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(200, 200, 200, 0.5);
-            z-index: 9999;
-        }
-
-        h1 {
-            font-size: 24px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 20px;
-        }
-
-        h5 {
-            position: absolute;
-            text-align: left;
-            top: 0;
-        }
-
-        .center {
-            text-align: center;
-        }
-    </style>
 </head>
 
 <body>
-    <div class="container">
-        <h5>Version: {{ version }}</h5>
-        <h1>Online Process</h1>
-        <form action="/get_online_info" method="post">
-            <button type="submit">获取在线信息</button>
+    <div class="navbar bg-base-100 shadow-lg" style="margin-bottom: 10px;">
+        <div class="flex-1">
+            <a class="btn btn-ghost text-xl">QQ Process Online</a>
+        </div>
+        <div class="flex-none">
+            <button class="btn btn-ghost btn-circle">
+                <label class="swap swap-rotate">
+                    <input type="checkbox" class="theme-controller" value="dark" />
+                    <svg class="swap-off fill-current w-10 h-10" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path
+                            d="M5.64,17l-.71.71a1,1,0,0,0,0,1.41,1,1,0,0,0,1.41,0l.71-.71A1,1,0,0,0,5.64,17ZM5,12a1,1,0,0,0-1-1H3a1,1,0,0,0,0,2H4A1,1,0,0,0,5,12Zm7-7a1,1,0,0,0,1-1V3a1,1,0,0,0-2,0V4A1,1,0,0,0,12,5ZM5.64,7.05a1,1,0,0,0,.7.29,1,1,0,0,0,.71-.29,1,1,0,0,0,0-1.41l-.71-.71A1,1,0,0,0,4.93,6.34Zm12,.29a1,1,0,0,0,.7-.29l.71-.71a1,1,0,1,0-1.41-1.41L17,5.64a1,1,0,0,0,0,1.41A1,1,0,0,0,17.66,7.34ZM21,11H20a1,1,0,0,0,0,2h1a1,1,0,0,0,0-2Zm-9,8a1,1,0,0,0-1,1v1a1,1,0,0,0,2,0V20A1,1,0,0,0,12,19ZM18.36,17A1,1,0,0,0,17,18.36l.71.71a1,1,0,0,0,1.41,0,1,1,0,0,0,0-1.41ZM12,6.5A5.5,5.5,0,1,0,17.5,12,5.51,5.51,0,0,0,12,6.5Zm0,9A3.5,3.5,0,1,1,15.5,12,3.5,3.5,0,0,1,12,15.5Z" />
+                    </svg>
+                    <svg class="swap-on fill-current w-10 h-10" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path
+                            d="M21.64,13a1,1,0,0,0-1.05-.14,8.05,8.05,0,0,1-3.37.73A8.15,8.15,0,0,1,9.08,5.49a8.59,8.59,0,0,1,.25-2A1,1,0,0,0,8,2.36,10.14,10.14,0,1,0,22,14.05,1,1,0,0,0,21.64,13Zm-9.5,6.69A8.14,8.14,0,0,1,7.08,5.22v.27A10.15,10.15,0,0,0,17.22,15.63a9.79,9.79,0,0,0,2.1-.22A8.11,8.11,0,0,1,12.14,19.73Z" />
+                    </svg>
+                </label>
+            </button>
+        </div>
+    </div>
+    <div role="alert" class="alert bg-base-300 shadow-lg" style="margin-bottom: 10px; display: inline-block;">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"
+            style="display: inline-block;">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <span>登录前请填写QQ号！</span>
+    </div>
+    <div style="margin-bottom: 10px;">
+        <form action="/get_online_info" method="post" style="display: inline-block;">
+            <button class="btn btn-accent" type="submit">获取在线信息</button>
         </form>
-        <button class="exit-btn" onclick="clearData('admin')">全部退出</button>
-        <button class="exit-btn" onclick="clearData('qq')">退出指定QQ</button>
-        <br />
+        <label for="adminWindow" class="btn btn-secondary" onclick="clearData('admin');">全部退出</label>
+        <label for="qqWindow" class="btn btn-secondary" onclick="clearData('qq')">退出指定QQ</button>
+    </div>
+    <div style="margin-bottom: 10px;">
         <form action="/login" method="post" onsubmit="return login_validateForm();">
-            <input type="text" id="qqNumberInput" name="qqNumberInput" placeholder="请输入登录或退出的QQ号" class="input-style">
-            <button type="submit" class="login-btn">登录</button>
+            <input type="text" id="qqNumberInput" name="qqNumberInput" placeholder="请输入登录或退出的QQ号"
+                class="input input-bordered input-primary w-full max-w-xs">
+            <button class="btn btn-primary" type="submit" class="login-btn">登录</button>
         </form>
-        <br />
-        <div id="message">说明: 登录前请填写QQ号！</div>
-        <h2>返回数据：</h2>
-        <table id="myTable">
+    </div>
+    <div style="margin-bottom: 10px;" id="myTable">
+        <h2 style="margin-bottom: 10px;">返回数据：</h2>
+        <table class="table bg-base-300">
             <thead>
-                <tr>
-                    <th class="center">No.</th>
+                <tr style="text-align: center;">
+                    <th>No.</th>
                     <th>内容</th>
                 </tr>
             </thead>
             <tbody>
                 {% for log in data %}
-                <tr>
-                    <td class="center">{{ loop.index }}</td>
+                <tr class="hover">
+                    <td style="text-align: center;">{{ loop.index }}</td>
                     <td>{{ log }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
-    <div id="adminWindow" style="display: none;">
-        <form action="/exit_all" method="post"
-            style="background-color: #e0e0e0; border: 2px solid blue; border-radius: 8px; margin: 10px; text-align: center;"
-            onsubmit="return exit_validateForm('admin');">
-            <span>管理员账号：</span>
-            <input type="text" id="adminAccount" name="adminAccount" placeholder="请输入管理员账号" />
-            <br />
-            <span>管理员密码：</span>
-            <input type="password" id="adminPassword" name="adminPassword" placeholder="请输入管理员密码" />
-            <br />
-            <button class="exit-btn" onclick="adminWindow.style.display = 'none';return false;">取消</button>
-            <button type="submit">确认</button>
+    <dialog id="message" class="modal">
+        <div class="modal-box">
+            <h3 class="font-bold text-lg">提示：</h3>
+            <p class="py-4"></p>
+        </div>
+        <form method="dialog" class="modal-backdrop">
+            <button>close</button>
         </form>
+    </dialog>
+    <input type="checkbox" id="adminWindow" class="modal-toggle" />
+    <div class="modal modal-bottom sm:modal-middle" role="dialog">
+        <div class="modal-box">
+            <h3 class="font-bold text-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none"
+                    viewBox="0 0 24 24" style="display: inline-block;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                管理员身份验证
+            </h3>
+            <form action="/exit_all" method="post" id="window" onsubmit="return exit_validateForm('admin');">
+                <div class="hero-content">
+                    <p class="py-3" style="display: inline-block;">管理员账号：</p>
+                    <input type="text" id="adminAccount" name="adminAccount" placeholder="请输入管理员账号"
+                        class="input input-bordered input-primary w-full max-w-xs" />
+                </div>
+                <div class="hero-content">
+                    <p class="py-3" style="display: inline-block;">管理员密码：</p>
+                    <input type="password" id="adminPassword" name="adminPassword" placeholder="请输入管理员密码"
+                        class="input input-bordered input-primary w-full max-w-xs" />
+                </div>
+                <div class="modal-action">
+                    <label for="adminWindow" class="btn btn-error">取消</label>
+                    <button class="btn btn-success" type="submit">确认</button>
+                </div>
+            </form>
+        </div>
     </div>
-    <div id="qqWindow" style="display: none;">
-        <form action="/exit_qq" method="post"
-            style="background-color: #e0e0e0; border: 2px solid blue; border-radius: 8px; margin: 10px; text-align: center;"
-            onsubmit="return exit_validateForm('qq');">
-            <span>QQ账号：</span>
-            <input type="text" id="qqAccount" name="qqAccount" placeholder="请输入QQ账号" />
-            <br />
-            <span>QQ密码：</span>
-            <input type="password" id="qqPassword" name="qqPassword" placeholder="请输入QQ密码" />
-            <br />
-            <button class="exit-btn" onclick="qqWindow.style.display = 'none';return false;">取消</button>
-            <button type="submit">确认</button>
-        </form>
+    <input type="checkbox" id="qqWindow" class="modal-toggle" />
+    <div class="modal modal-bottom sm:modal-middle" role="dialog">
+        <div class="modal-box">
+            <h3 class="font-bold text-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none"
+                    viewBox="0 0 24 24" style="display: inline-block;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                用户身份验证
+            </h3>
+            <form action="/exit_qq" method="post" id="window" onsubmit="return exit_validateForm('qq');">
+                <div class="hero-content">
+                    <p class="py-3" style="display: inline-block;">QQ账号：</p>
+                    <input type="text" id="qqAccount" name="qqAccount" placeholder="请输入QQ账号"
+                        class="input input-bordered input-primary w-full max-w-xs" />
+                </div>
+                <div class="hero-content">
+                    <p class="py-3" style="display: inline-block;">QQ密码：</p>
+                    <input type="password" id="qqPassword" name="qqPassword" placeholder="请输入QQ密码"
+                        class="input input-bordered input-primary w-full max-w-xs" />
+                </div>
+                <div class="modal-action">
+                    <label for="qqWindow" class="btn btn-error">取消</label>
+                    <button class="btn btn-success" type="submit">确认</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="btm-nav">
+        <button class="btn btn-ghost p-2">Version: {{ version }}</button>
     </div>
 
     <script>
@@ -230,7 +156,6 @@
         function clearData(s) {
             $("#" + s + "Account").val("");
             $("#" + s + "Password").val("");
-            $("#" + s + "Window").show();
         }
 
         // 检查退出是否有数据
@@ -241,7 +166,8 @@
 
             // 判断账号和密码是否为空
             if (account === '' || password === '') {
-                alert('账号和密码不能为空！');
+                message.showModal()
+                $(".py-4").text('账号和密码不能为空！');
                 return false;
             }
 
@@ -253,24 +179,26 @@
         // 检查登录是否有数据
         function login_validateForm() {
             var qqNumberInput = $("#qqNumberInput");
+            message.showModal()
             if (qqNumberInput.val().trim() === "") {
-                alert("QQ 号不能为空！");
+                $(".py-4").text("QQ号不能为空！");
                 return false;
             }
-            alert("登录QQ大约需要6~10秒，请耐心等待！");
+            $(".py-4").text("登录QQ大约需要6~10秒，请耐心等待！");
             countdown();
             return true;
         }
 
         // 倒计时
         function countdown() {
+            message.showModal()
             var seconds = 8;
             var timer = setInterval(function () {
-                $("#message").text("请耐心等待 " + seconds + " 秒后显示结果");
+                $(".py-4").text("请耐心等待 " + seconds + " 秒后显示结果");
                 seconds--;
                 if (seconds < 0) {
                     clearInterval(timer);
-                    $("#message").text("");
+                    $(".py-4").text("");
                 }
             }, 1000);
         }
