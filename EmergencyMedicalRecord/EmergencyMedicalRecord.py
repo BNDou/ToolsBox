@@ -1,12 +1,11 @@
 '''
 Author: BNDou
 Date: 2024-06-07 00:10:13
-LastEditTime: 2024-06-07 07:25:49
+LastEditTime: 2024-06-07 07:43:12
 FilePath: \ToolsBox\EmergencyMedicalRecord\EmergencyMedicalRecord.py
 Description: 
 '''
 import os
-import sys
 from tkinter import filedialog
 from openpyxl import load_workbook
 import pandas as pd
@@ -129,8 +128,20 @@ def select_file():
     file_path_label.config(text=os.path.abspath(file_path))
 
 
+def center_window(window, width, height):
+    '''
+    窗口居中
+    '''
+    screen_width = window.winfo_screenwidth()
+    screen_height = window.winfo_screenheight()
+    x = (screen_width / 2) - (width / 2)
+    y = (screen_height / 2) - (height / 2)
+    window.geometry(f"{width}x{height}+{int(x)}+{int(y)}")
+
+
 root = Tk()
-root.title("急诊病历登记")
+center_window(root, 350, 350)
+root.title("急诊病历登记 APP")
 
 select_file_button = tk.Button(root, text="选择文件", command=select_file)
 select_file_button.grid(row=0, column=0, padx=5, pady=5)
