@@ -1,0 +1,47 @@
+<!--
+ * @Author: BNDou
+ * @Date: 2024-07-07 05:53:05
+ * @LastEditTime: 2024-07-07 06:07:55
+ * @FilePath: \ToolsBox\showCaptcha\templates\captcha.html
+ * @Description: 
+-->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>验证码测试</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        div.img {
+            display: block;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div>
+        <input type="text" placeholder="验证码">
+        <br>
+        <img id="captcha" src="https://cdn1.cmcoins.boc.cn/ocas-web/ImageValidation/validation1704292251688.gif"
+            alt="验证码" onclick="refreshCaptcha()">
+    </div>
+    <script>
+        function refreshCaptcha() {
+            var img = document.getElementById("captcha");
+            img.src = "https://cdn1.cmcoins.boc.cn/ocas-web/ImageValidation/validation1704292251688.gif?" + Math.random();
+        }
+    </script>
+</body>
+
+</html>

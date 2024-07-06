@@ -1,0 +1,113 @@
+<!--
+ * @Author: BNDou
+ * @Date: 2024-04-06 20:44:47
+ * @LastEditTime: 2024-06-26 21:49:26
+ * @FilePath: \ToolsBox\jjietu\templates\index.html
+ * @Description: 
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <title>截图</title>
+    <style>
+        form {
+            display: inline-block;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th, td {
+            border: 2px solid #ccc;
+            padding: 8px;
+            text-align: left;
+            border-radius: 10px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        tr:hover {
+            background-color: #e0e0e0;
+        }
+
+        td:first-child {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+
+        button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 8px;
+        }
+
+        button:hover {
+            background-color: #3e8e41;
+        }
+
+        button.restart-btn {
+            background-color: #fd3e3e;
+        }
+
+        button.restart-btn:hover {
+            background-color: red;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .center {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>截图</h1>
+        <form action="/get_data" method="post">
+            <button type="submit">获取截图</button>
+        </form>
+        <h2>返回截图：</h2>
+        <img src="data:image/png;base64,{{ img_base64 }}" alt="Image">
+    </div>
+</body>
+</html>

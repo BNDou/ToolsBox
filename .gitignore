@@ -157,3 +157,7 @@ cython_debug/
 .idea/ToolsBox.iml
 .idea/vcs.xml
 QQOnline/templates/config.json
+/get_barcode_url/获取二维码url
+get_barcode_url/获取二维码url.exe
+jjietu/屏幕监控截图.exe
+showCaptcha/验证码测试.exe
