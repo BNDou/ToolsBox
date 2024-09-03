@@ -1,19 +1,20 @@
 /**
  * @Author: BNDou
  * @Date: 2024-09-02 23:46:21
- * @LastEditTime: 2024-09-03 04:12:31
+ * @LastEditTime: 2024-09-04 02:52:41
  * @FilePath: \ToolsBox\DingClockIn\DingClockIn.js
  * @Description: 
- * 借鉴自：https://github.com/georgehuan1994/DingDing-Automatic-Clock-in
  */
 // pushplus推送token
 const PUSHPLUS_TOKEN = "";
 // pushplus邮箱推送，需在公众号配置邮箱: true-邮箱推送 false-公众号推送(建议)
 const PUSHPLUS_MAIL = true;
-
-
 // 公司的钉钉CorpId, 获取方法：https://www.dingtalk.com?corpId=$CORPID$
 const CORP_ID = "";
+// 公司名称 如果上面的id不会获取，就把钉钉里面的公司名称一字不差的写进来
+const COMPANY_NAME = "";
+
+
 // 钉钉包名
 const PACKAGE_NAME = "com.alibaba.android.rimet"
 const APP_NAME = "钉钉";
@@ -21,7 +22,6 @@ const APP_NAME = "钉钉";
 const PACKAGE_ID_WHITE_LIST = [PACKAGE_NAME];
 // 监听音量+键, 开启后无法通过音量+键调整音量, 按下音量+键：结束所有子线程
 const OBSERVE_VOLUME_KEY = true;
-const WEEK_DAY = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",];
 
 
 
@@ -50,6 +50,22 @@ console.setPosition(0, 0);
 console.setSize(0.5, 700);
 console.show(true);
 console.setLogSize(10);
+
+// 检查是否为工作日
+if (!isWorkDay()) {
+    var battery = isBatteryLow() + " 剩余电量：" + device.getBattery() + "%";
+    var msg = "🌴 今日休息日，不执行打卡";
+    console.info(battery);
+    console.info(msg);
+    // 获取一言
+    msg = "## " + battery + "\n## " + msg + sendOne();
+    // 推送
+    sendPushPlus(msg);
+    // 关闭屏幕
+    lockScreen();
+    // 结束脚本运行
+    exit();
+}
 
 // 监听通知
 try {
@@ -84,7 +100,7 @@ events.onKeyDown("volume_up", function (event) {
 // 打卡
 clockIn();
 
-toastLog("监听中, 请在日志中查看记录的通知及其内容");
+// toastLog("监听中, 请在日志中查看记录的通知及其内容");
 
 // ========== ↑↑↑ 主线程：监听通知 ↑↑↑ ==========
 
@@ -106,8 +122,13 @@ function printNotification(n) {
     if (n.getText().indexOf("打卡·成功")) {
 
         // 推送内容
-        var msg = "🎉 【打卡·成功】" + getCurrentDate() + " " + getCurrentTime();
+        var battery = isBatteryLow() + " 剩余电量：" + device.getBattery() + "%";
+        var msg = "🎉 [打卡·成功]" + getCurrentDate() + " " + getCurrentTime();
+        console.info(battery);
         console.info(msg);
+
+        // 获取一言
+        msg = "## " + battery + "\n## " + msg + sendOne();
 
         // 推送
         sendPushPlus(msg);
@@ -142,7 +163,7 @@ function clockIn() {
         //     button.click();
         // }
     } catch (e) {
-        console.error("启动钉钉失败" + e);
+        console.error("❌ 启动钉钉失败" + e);
     }
 }
 
@@ -152,7 +173,7 @@ function sendPushPlus(msg) {
     const data = {
         "token": PUSHPLUS_TOKEN,
         "title": "钉钉自动打卡",
-        "content": "# " + msg,
+        "content": msg,
         "template": "markdown"
     };
     if (PUSHPLUS_MAIL) {
@@ -162,6 +183,8 @@ function sendPushPlus(msg) {
     var res = http.post(url, data);
     if (res.body.json()["code"] == 200) {
         console.log("✅ 推送成功");
+    } else {
+        console.error("❌ 推送失败");
     }
 }
 
@@ -186,21 +209,22 @@ function brightScreen() {
 
 // 使用 URL Scheme 进入考勤界面
 function attendKaoqin() {
-    var url_scheme = "dingtalk://dingtalkclient/page/link?url=https://attend.dingtalk.com/attend/index.html";
-    if (CORP_ID != "") {
-        url_scheme = url_scheme + "?corpId=" + CORP_ID;
-    } else {
-        console.error("❌ 未设置 CORP_ID，无法跳转到考勤界面，尝试打开应用");
-        launch(PACKAGE_NAME);
-        return;
-    }
+    // 打开应用
+    launch(PACKAGE_NAME);
 
+    var url_scheme = "dingtalk://dingtalkclient/page/link?url=https://attend.dingtalk.com/attend/index.html?corpId=" + CORP_ID;
     var a = app.intent({
         action: "VIEW",
         data: url_scheme
     });
     app.startActivity(a);
     console.log("正在进入考勤界面...");
+    // sleep(2000);
+
+    if (CORP_ID.length == 0) {
+        text(COMPANY_NAME).waitFor();
+        text(COMPANY_NAME).findOne().click();
+    }
 
     text("打卡").waitFor();
     text("统计").waitFor();
@@ -273,8 +297,7 @@ function getCurrentDate() {
     var year = dateDigitToString(currentDate.getFullYear());
     var month = dateDigitToString(currentDate.getMonth() + 1);
     var date = dateDigitToString(currentDate.getDate());
-    var week = currentDate.getDay();
-    var formattedDateString = year + '-' + month + '-' + date + '-' + WEEK_DAY[week];
+    var formattedDateString = year + '-' + month + '-' + date;
     return formattedDateString;
 }
 
@@ -307,4 +330,77 @@ function setVolume(volume) {
     device.setNotificationVolume(volume);
     console.verbose("媒体音量:" + device.getMusicVolume());
     console.verbose("通知音量:" + device.getNotificationVolume());
+}
+
+// 判断电量
+function isBatteryLow() {
+    var battery = device.getBattery();
+    if (battery <= 30) {
+        return "🔴";
+    } else if (battery > 30 && battery <= 60) {
+        return "🟡";
+    } else if (battery > 60) {
+        return "🟢";
+    }
+}
+
+// 每日一言推送
+function sendOne() {
+    var res = http.get("https://timor.tech/api/holiday/tts/tomorrow", {
+        headers: { 'User-Agent': '' }
+    });
+    if (res.statusCode != 200) {
+        console.error("❌ 明天放假吗 获取失败");
+        return;
+    } else {
+        var json = res.body.json();
+        if (json['code'] != 0) {
+            console.error("❌ 明天放假吗 获取失败");
+            return;
+        }
+        var text1 = "📢 " + json['tts'];
+        console.info(text1);
+    }
+
+    var res = http.get("https://timor.tech/api/holiday/tts", {
+        headers: { 'User-Agent': '' }
+    });
+    if (res.statusCode != 200) {
+        console.error("❌ 距离今天最近的一个节假日安排 获取失败");
+        return;
+    } else {
+        var json = res.body.json();
+        if (json['code'] != 0) {
+            console.error("❌ 距离今天最近的一个节假日安排 获取失败");
+            return;
+        }
+        var text2 = "📢 " + json['tts'];
+        console.info(text2);
+    }
+    return "\n- #### " + text1 + "\n- #### " + text2;
+}
+
+// 判断是否工作日
+function isWorkDay() {
+    var res = http.get("https://timor.tech/api/holiday/info/" + getCurrentDate(), {
+        headers: { 'User-Agent': '' }
+    });
+    if (res.statusCode != 200) {
+        console.error("❌ 判断是否工作日 获取失败");
+        return true;
+    } else {
+        var json = res.body.json();
+        if (json['code'] != 0) {
+            console.error("❌ 判断是否工作日 获取失败");
+            return true;
+        }
+        if (json['holiday'] == null) { // 非法定节假日
+            if (json['type']['week'] > 5) { // 星期天
+                return false;
+            }
+        } else { // 法定节假日
+            return false;
+        }
+        return true;
+    }
 }
