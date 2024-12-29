@@ -1,406 +1,456 @@
 /**
  * @Author: BNDou
  * @Date: 2024-09-02 23:46:21
- * @LastEditTime: 2024-09-04 02:52:41
+ * @LastEditTime: 2024-12-29 16:26:10
  * @FilePath: \ToolsBox\DingClockIn\DingClockIn.js
- * @Description: 
+ * @Description: 钉钉自动打卡脚本
  */
-// pushplus推送token
-const PUSHPLUS_TOKEN = "";
-// pushplus邮箱推送，需在公众号配置邮箱: true-邮箱推送 false-公众号推送(建议)
-const PUSHPLUS_MAIL = true;
-// 公司的钉钉CorpId, 获取方法：https://www.dingtalk.com?corpId=$CORPID$
-const CORP_ID = "";
-// 公司名称 如果上面的id不会获取，就把钉钉里面的公司名称一字不差的写进来
-const COMPANY_NAME = "";
 
+"ui";
 
-// 钉钉包名
-const PACKAGE_NAME = "com.alibaba.android.rimet"
-const APP_NAME = "钉钉";
-// PackageId白名单
-const PACKAGE_ID_WHITE_LIST = [PACKAGE_NAME];
-// 监听音量+键, 开启后无法通过音量+键调整音量, 按下音量+键：结束所有子线程
-const OBSERVE_VOLUME_KEY = true;
+// 配置常量
+const CONFIG = {
+    UA: "Mozilla/5.0 (Linux; Android 14; 24031PN0DC Build/UKQ1.231003.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/126.0.6478.188 Mobile Safari/537.36 XWEB/1260117 MMWEBSDK/20240501 MMWEBID/4963 MicroMessenger/8.0.50.2701(0x2800325A) WeChat/arm64 Weixin NetType/4G Language/zh_CN ABI/arm64",
+    // 钉钉包名
+    PACKAGE_NAME: "com.alibaba.android.rimet",
+    APP_NAME: "钉钉",
+    // PackageId白名单
+    PACKAGE_ID_WHITE_LIST: ["net.dinglisch.android.taskerm", "com.alibaba.android.rimet"],
+    // 随机等待时间避免检测
+    WAIT_TIME: {
+        MIN: 1, // 最小等待时间（秒）
+        MAX: 10 // 最大等待时间（秒）
+    }
+};
 
-
-
-// ========== ↓↓↓ 主线程：监听通知 ↓↓↓ ==========
-
-var currentDate = new Date();
+// 版本信息
+const VERSION = "2024.1229.1626";
 
 // 运行日志路径
-var globalLogFilePath = "/sdcard/脚本/DingClockInLog/" + getCurrentDate() + "-log.txt";
-
-// 检查无障碍权限
-auto.waitFor("normal");
-
-// 创建运行日志
-console.setGlobalLogConfig({
-    file: "/sdcard/脚本/DingClockInLog/" + getCurrentDate() + "-log.txt"
-});
-
-// 唤醒设备
-brightScreen();
-
-// 显示控制台
-// console.clear();
-console.setTitle('钉钉打卡');
-console.setPosition(0, 0);
-console.setSize(0.5, 700);
-console.show(true);
-console.setLogSize(10);
-
-// 检查是否为工作日
-if (!isWorkDay()) {
-    var battery = isBatteryLow() + " 剩余电量：" + device.getBattery() + "%";
-    var msg = "🌴 今日休息日，不执行打卡";
-    console.info(battery);
-    console.info(msg);
-    // 获取一言
-    msg = "## " + battery + "\n## " + msg + sendOne();
-    // 推送
-    sendPushPlus(msg);
-    // 关闭屏幕
-    lockScreen();
-    // 结束脚本运行
-    exit();
+const LOG_PATH = "/sdcard/脚本/DingClockInLog/";
+const Holiday_Path = "/sdcard/脚本/DingClockInLog/holiday.txt";
+const Config_Path = "/sdcard/脚本/DingClockInLog/config.txt";
+var file;
+if (!files.exists(Config_Path)) {
+    file = open(Config_Path, "w");
+    file.write(`{"screen_lock_key": "","pushplus_token": "","send_type": 0}`);
+    file.close();
 }
-
-// 监听通知
-try {
-    log("监听打卡通知中...");
-    events.observeNotification();
-    events.onNotification(function (n) {
-        printNotification(n);
-    });
-} catch (e) {
-    console.error("❌ 监听通知失败");
-    exit(e);
-}
-
-events.setKeyInterceptionEnabled("volume_up", OBSERVE_VOLUME_KEY);
-
-if (OBSERVE_VOLUME_KEY) {
-    events.observeKey();
-}
-
-// 监听音量+键
-events.onKeyDown("volume_up", function (event) {
-    threads.shutDownAll();
-    device.setBrightnessMode(1);
-    device.cancelKeepingAwake();
-    toast("已中断所有子线程!");
-
-    // 可以在此调试各个方法
-    // clockIn();
-    // sendEmail("测试文本");
-});
-
-// 打卡
-clockIn();
-
-// toastLog("监听中, 请在日志中查看记录的通知及其内容");
-
-// ========== ↑↑↑ 主线程：监听通知 ↑↑↑ ==========
-
-
-
-// 处理通知
-function printNotification(n) {
-    var packageName = n.getPackageName(); // 获取通知包名
-    var abstract = n.tickerText; // 获取通知摘要
-    var text = n.getText(); // 获取通知文本
-
-    // 过滤 PackageId 白名单之外的应用所发出的通知
-    if (!filterNotification(packageName, abstract, text)) {
+file = open(Config_Path, "r");
+//读取token内容
+const data =  JSON.parse(file.read());
+var screen_lock_key = data["screen_lock_key"];
+var pushplus_token = data["pushplus_token"];
+var send_type = data["send_type"];
+file.close();
+ui.layout(
+    <vertical padding="16">
+        <text textSize="40sp" gravity="center">钉钉自动打卡脚本</text>
+        <text textStyle="italic" textColor="red" gravity="right">版本号：{VERSION}</text>
+        <text textStyle="italic" textColor="red" gravity="right">By BNDou</text>
+        <text margin="8">Android是一种基于Linux的自由及开放源代码的操作系统，主要使用于移动设备，如智能手机和平板电脑，由Google公司和开放手机联盟领导及开发。尚未有统一中文名称，中国大陆地区较多人使用“安卓”或“安致”。Android操作系统最初由Andy Rubin开发，主要支持手机。2005年8月由Google收购注资。2007年11月，Google与84家硬件制造商、软件开发商及电信营运商组建开放手机联盟共同研发改良Android系统。</text>
+        <text autoLink="all" gravity="center">主页：https://github.com/BNDou</text>
+        <text text="锁屏密码(没有锁屏，可为空)" textColor="black" textSize="16sp" marginTop="16"/>
+        <input id="screen_lock_key" hint="请输入锁屏密码">{screen_lock_key}</input>
+        <text text="PUSHPLUS推送token" textColor="black" textSize="16sp" marginTop="16"/>
+        <input id="pushplus_token" hint="请输入PUSHPLUS_TOKEN">{pushplus_token}</input>
+        <horizontal>
+            <text textSize="16sp">选择推送方式(默认公众号)</text>
+            <spinner id="send_type" entries="公众号|邮箱"/>
+        </horizontal>
+        <button id="ok" text="确定" w="auto" style="Widget.AppCompat.Button.Colored"/>
+    </vertical>
+);
+ui.send_type.setSelection(send_type);
+ui.ok.click(() => {
+    screen_lock_key = ui.screen_lock_key.text();
+    pushplus_token = ui.pushplus_token.text();
+    send_type = ui.send_type.getSelectedItemPosition();
+    if (pushplus_token.length == 0) {
+        ui.pushplus_token.setError("输入不能为空");
         return;
     }
-
-    log("\n🔔 应用包名: " + packageName + "\n🔔 通知文本: " + text);
-
-    if (n.getText().indexOf("打卡·成功")) {
-
-        // 推送内容
-        var battery = isBatteryLow() + " 剩余电量：" + device.getBattery() + "%";
-        var msg = "🎉 [打卡·成功]" + getCurrentDate() + " " + getCurrentTime();
-        console.info(battery);
-        console.info(msg);
-
-        // 获取一言
-        msg = "## " + battery + "\n## " + msg + sendOne();
-
-        // 推送
-        sendPushPlus(msg);
-
-        // 关闭应用
-        killApp();
-
-        // 关闭屏幕
-        lockScreen();
-
-        // 结束脚本运行
-        exit();
+    if (pushplus_token.length < 20) {
+        ui.pushplus_token.setError("token格式错误");
+        return;
     }
+    file = open(Config_Path, "w");
+    file.write(`{"screen_lock_key": "${screen_lock_key}","pushplus_token": "${pushplus_token}", "send_type": ${send_type}}`);
+    file.close();
+});
+
+// 工具函数
+const Utils = {
+    // 日期时间相关
+    formatDateDigit: function(num) {
+        return num < 10 ? "0" + num : num;
+    },
+
+    getCurrentTime: function() {
+        var now = new Date();
+        return this.formatDateDigit(now.getHours()) + ":" +
+            this.formatDateDigit(now.getMinutes()) + ":" +
+            this.formatDateDigit(now.getSeconds());
+    },
+
+    getCurrentDate: function() {
+        var now = new Date();
+        return now.getFullYear() + "-" +
+            this.formatDateDigit(now.getMonth() + 1) + "-" +
+            this.formatDateDigit(now.getDate());
+    },
+
+    // 随机等待时间
+    randomWait: function(min, max) {
+        var waitTime = Math.floor(Math.random() * (max - min + 1)) + min;
+        console.log("⏰ 等待时间：" + waitTime + "秒");
+        return waitTime;
+    },
+
+    // 设置媒体和通知音量
+    setVolume: function(volume) {
+        device.setMusicVolume(volume);
+        device.setNotificationVolume(volume);
+        device.setAlarmVolume(volume);
+        console.verbose("媒体音量:" + device.getMusicVolume());
+        console.verbose("通知音量:" + device.getNotificationVolume());
+    },
+
+    // 判断电量
+    isBatteryLow: function() {
+        var battery = device.getBattery();
+        if (battery <= 15) {
+            return "⚠️ 电量低";
+        } else if (battery <= 30) {
+            return "💡 电量适中";
+        }
+        return "✅ 电量充足";
+    }
+};
+
+// 初始化配置
+function initializeApp() {
+    console.warn("版本号：" + VERSION);
+    // 检查无障碍权限
+    auto.waitFor("normal");
+
+    // 创建运行日志
+    console.setGlobalLogConfig({
+        file: LOG_PATH + Utils.getCurrentDate() + "-DingLog.txt"
+    });
+
+    // 显示控制台
+    console.setTitle('钉钉打卡');
+    console.setPosition(0, 0);
+    console.setSize(0.5, 700);
+    console.show(true);
+    console.setLogSize(10);
 }
 
-// 打卡流程
-function clockIn() {
-    currentDate = new Date();
-    console.log("本地时间: " + getCurrentDate() + " " + getCurrentTime());
-    console.log("开始打卡流程!");
-
-    // 打开钉钉
-    try {
-        log("... 正在启动 " + APP_NAME);
-        setVolume(0); // 设备静音
-        attendKaoqin(); // 进入考勤页
-        toast("🔔 如果有确定打开的弹窗\n🔔 请点击确定");
-        // sleep(1000);
-        // var button = className('Button').textMatches(/(.*确.*|.*定.*|.*允.*|.*许.*)/).findOne();
-        // log(button);
-        // if (button) {
-        //     button.click();
-        // }
-    } catch (e) {
-        console.error("❌ 启动钉钉失败" + e);
-    }
-}
-
-// 推送
-function sendPushPlus(msg) {
-    const url = "http://www.pushplus.plus/send";
-    const data = {
-        "token": PUSHPLUS_TOKEN,
-        "title": "钉钉自动打卡",
-        "content": msg,
-        "template": "markdown"
-    };
-    if (PUSHPLUS_MAIL) {
-        data["channel"] = "mail";
-        data["webhook"] = "qq";
-    }
-    var res = http.post(url, data);
-    if (res.body.json()["code"] == 200) {
-        console.log("✅ 推送成功");
+// 获取当前年份节假日
+function getHolidayData() {
+    var res = http.get("https://timor.tech/api/holiday/year/" + new Date().getFullYear(), {
+        headers: {
+            'User-Agent': CONFIG.UA
+        }
+    });
+    if (res.statusCode != 200) {
+        console.error("❌ 当前年份节假日获取失败");
+        return true;
     } else {
-        console.error("❌ 推送失败");
+        var json = res.body.json();
+        if (json['code'] != 0) {
+            console.error("❌ 当前年份节假日获取失败");
+            return true;
+        }
+        if (json['holiday'] != null) {
+            var file = open(Holiday_Path, "w");
+            file.write(JSON.stringify(json['holiday']));
+            file.close();
+            console.info("✅ 节假日数据更新成功");
+        }
+    }
+}
+
+// 工作日判断
+function isWorkingDay() {
+    try {
+        var currentYear = new Date().getFullYear();
+        var file;
+        if (!files.exists(Holiday_Path)) {
+            file = open(Holiday_Path, "w");
+            file.close();
+        }
+        //打开文件
+        file = open(Holiday_Path, "r");
+        //读取文件的所有内容
+        var holidays = file.read();
+        //关闭文件
+        file.close();
+        if (holidays.length == 0) {
+            console.info("❌ 节假日数据不存在，前往获取");
+            getHolidayData();
+            file = open(Holiday_Path, "r");
+            holidays = file.read();
+            file.close();
+        } else {
+            for (var key in JSON.parse(holidays)) {
+                const year = JSON.parse(holidays)[key].date.split('-')[0];
+                if (year != currentYear) {
+                    getHolidayData();
+                } else {
+                    console.info("✅ 节假日数据已存在，无需更新");
+                }
+                break;
+            }
+        }
+
+        const today = new Date();
+        const dateStr = `${today.getMonth() + 1}-${today.getDate()}`;
+        //dateStr='10-12';
+        //console.log(holidays[dateStr]);
+
+        if (JSON.parse(holidays)[dateStr]) {
+            return !JSON.parse(holidays)[dateStr].holiday;
+        }
+
+        const dayOfWeek = today.getDay();
+        //dayOfWeek=0;
+        //console.log(dayOfWeek);
+        if (dayOfWeek === 0 || dayOfWeek === 6) {
+            return false;
+        }
+
+        return true;
+    } catch (error) {
+        console.error("❌ 节假日API请求失败：" + error);
+        return true; // 默认按工作日处理
+    }
+}
+
+// 推送消息
+function sendPushPlus(sendTitle, sendMsg) {
+    try {
+        var url = "http://www.pushplus.plus/send";
+        var data = {
+            token: pushplus_token,
+            title: sendTitle,
+            content: sendMsg,
+            template: "markdown"
+        };
+
+        if (send_type) {
+            data.channel = "mail";
+            data.webhook = "qq";
+        }
+
+        var res = http.post(url, data);
+        var result = res.body.json();
+
+        if (result.code === 200) {
+            console.info("✅ 推送成功");
+            return true;
+        }
+
+        console.error("❌ 推送失败：" + result.msg);
+        return false;
+    } catch (error) {
+        console.error("❌ 推送请求失败：" + error);
+        return false;
     }
 }
 
 // 唤醒设备
 function brightScreen() {
-    console.log("唤醒设备");
-    device.wakeUpIfNeeded(); // 唤醒设备
-    device.keepScreenOn(); // 保持亮屏
-    device.setBrightnessMode(0); // 手动亮度模式
-    device.setBrightness(0); // 设置亮度为0
-    sleep(500); // 等待屏幕亮起
+    console.verbose("唤醒设备");
+    device.wakeUp();
+    sleep(2000);
+    swipe(500, 1500, 500, 10, 1000);
+    sleep(1000);
+    if (screen_lock_key.length > 0) {
+        for (var i = 0; i < screen_lock_key.length; i++) {
+        desc(screen_lock_key[i].toString()).findOne(3000).click();
+        sleep(234);
+        }
+    }
+    device.keepScreenDim();
+    device.setBrightnessMode(1);
+    // device.setBrightness(1);
+    sleep(500);
 
     if (!device.isScreenOn()) {
         console.warn("❌ 设备未唤醒, 重试");
-        device.wakeUpIfNeeded();
+        device.wakeUp();
         brightScreen();
-    }
-    else {
+    } else {
         console.info("✅ 设备已唤醒");
     }
 }
 
 // 使用 URL Scheme 进入考勤界面
 function attendKaoqin() {
-    // 打开应用
-    launch(PACKAGE_NAME);
+    console.verbose("打开应用中 ...");
+    launch(CONFIG.PACKAGE_NAME);
+    toast("🔔 如果有确定打开的弹窗\n🔔 请点击确定");
+    var button = className('Button').textMatches(/(.*确定.*|.*允许.*)/).findOne(1000);
+    if (button) {
+        button.click();
+    }
+    console.info("✅ " + CONFIG.APP_NAME + "-应用已打开");
 
-    var url_scheme = "dingtalk://dingtalkclient/page/link?url=https://attend.dingtalk.com/attend/index.html?corpId=" + CORP_ID;
+    console.verbose("正在进入考勤界面 ...");
+    var url_scheme = "dingtalk://dingtalkclient/page/calendarHome?channel=calendarwidget";
     var a = app.intent({
+        packageName: CONFIG.PACKAGE_NAME,
+        flags: ["activity_new_task"],
         action: "VIEW",
         data: url_scheme
     });
     app.startActivity(a);
-    console.log("正在进入考勤界面...");
-    // sleep(2000);
 
-    if (CORP_ID.length == 0) {
-        text(COMPANY_NAME).waitFor();
-        text(COMPANY_NAME).findOne().click();
-    }
-
-    text("打卡").waitFor();
-    text("统计").waitFor();
-    text("设置").waitFor();
+    id("calendar_week_month_switcher").waitFor()
     console.info("✅ 已进入考勤界面");
+    swipe(500, 1200, 500, 800, 1000);
+    swipe(500, 1200, 500, 1600, 1000);
 }
 
 // 锁屏
-function lockScreen() {
-    console.log("关闭屏幕");
+function screen() {
+    console.verbose("关闭屏幕");
+    device.cancelKeepingAwake();
+    lockScreen();
 
-    // 锁屏方案1：Root
-    // Power()
-
-    // 锁屏方案2：No Root
-    // press(Math.floor(device.width / 2), Math.floor(device.height * 0.973), 1000) // 小米的快捷手势：长按Home键锁屏
-
-    //    device.setBrightnessMode(1) // 自动亮度模式
-    device.cancelKeepingAwake(); // 取消设备常亮
-
-    if (isDeviceLocked()) {
+    sleep(1000);
+    if (!device.isScreenOn()) {
         console.info("✅ 屏幕已关闭");
-    }
-    else {
+    } else {
         console.error("❌ 屏幕未关闭, 请尝试其他锁屏方案, 或等待屏幕自动关闭");
     }
 }
 
 // 停止APP
 function killApp() {
-    app.openAppSetting(PACKAGE_NAME);
-    //通过包名获取已安装的应用名称，判断是否已经跳转至该app的应用设置界面
-    text(APP_NAME).waitFor();
+    app.openAppSetting(CONFIG.PACKAGE_NAME);
+    text(CONFIG.APP_NAME).waitFor();
     sleep(1000);
-    //稍微休息一下，不然看不到运行过程，自己用时可以删除这行
-    let is_sure = textMatches(/(.*强.*|.*停.*|.*结.*)/).findOne();
-    // log(is_sure.text());
-    //在app的应用设置界面找寻包含“强”，“停”，“结”的控件
-    if (is_sure.enabled()) { //判断控件是否已启用（想要关闭的app是否运行）
-        is_sure.parent().click(); //结束应用的控件如果无法点击，需要在布局中找寻它的父控件，如果还无法点击，再上一级控件，本案例就是控件无法点击
-        textMatches(/(.*确.*|.*定.*|.*允.*|.*许.*)/).findOne().click();
-        log(APP_NAME + "-应用已被关闭");
-        sleep(1000);
-        back();
+
+    var is_sure = textMatches(/(.*强.*|.*停.*|.*结.*)/).findOne();
+    if (is_sure.enabled()) {
+        switch (device.brand.toLowerCase()) {
+            case 'xiaomi':
+                is_sure.parent().click();
+                sleep(1000);
+                textMatches(/(.*确.*|.*定.*|.*允.*|.*许.*)/).findOne().click();
+                break;
+            case 'huawei':
+            case 'honor':
+                is_sure.click();
+                sleep(1000);
+                textMatches(/(.*强行停止.*|.*确.*|.*定.*|.*允.*|.*许.*)/).findOnce(1).click();
+                break;
+            default:
+                console.error("❌ 找不到停止运行的按钮，可能未适配-" + device.brand.toLowerCase());
+                launch("org.autojs.autoxjs.v6");
+        }
+        console.info("✅ 应用已被关闭");
     } else {
-        log(APP_NAME + "-应用不能被正常关闭或不在后台运行");
-        back();
+        console.error("❌ 应用不能被正常关闭或不在后台运行");
+    }
+    launch("org.autojs.autoxjs.v6");
+}
+
+// 打卡流程
+function clockIn() {
+    console.verbose("本地时间: " + Utils.getCurrentDate() + " " + Utils.getCurrentTime());
+    console.verbose("开始打卡流程!");
+
+    try {
+        Utils.setVolume(0);
+        attendKaoqin();
+    } catch (e) {
+        console.error("❌ 启动钉钉失败" + e);
     }
 }
 
+// 处理通知
+function handleNotification(n) {
+    var packageName = n.getPackageName();
+    var title = n.getTitle();
+    var text = n.getText();
 
-
-// ===================== ↓↓↓ 功能函数 ↓↓↓ =======================
-
-function dateDigitToString(num) {
-    return num < 10 ? '0' + num : num;
-}
-
-function getCurrentTime() {
-    var currentDate = new Date();
-    var hours = dateDigitToString(currentDate.getHours());
-    var minute = dateDigitToString(currentDate.getMinutes());
-    var second = dateDigitToString(currentDate.getSeconds());
-    var formattedTimeString = hours + ':' + minute + ':' + second;
-    return formattedTimeString;
-}
-
-function getCurrentDate() {
-    var currentDate = new Date();
-    var year = dateDigitToString(currentDate.getFullYear());
-    var month = dateDigitToString(currentDate.getMonth() + 1);
-    var date = dateDigitToString(currentDate.getDate());
-    var formattedDateString = year + '-' + month + '-' + date;
-    return formattedDateString;
-}
-
-// 通知过滤器
-function filterNotification(bundleId, abstract, text) {
-    var check = PACKAGE_ID_WHITE_LIST.some(function (item) { return bundleId == item });
-    if (check) {
-        console.verbose(bundleId);
-        console.verbose(abstract);
-        console.verbose(text);
-        console.verbose("----------");
-        return true;
-    }
-    else {
-        return false;
-    }
-}
-
-// 屏幕是否为锁定状态
-function isDeviceLocked() {
-    importClass(android.app.KeyguardManager);
-    importClass(android.content.Context);
-    var km = context.getSystemService(Context.KEYGUARD_SERVICE);
-    return km.isKeyguardLocked();
-}
-
-// 设置媒体和通知音量
-function setVolume(volume) {
-    device.setMusicVolume(volume);
-    device.setNotificationVolume(volume);
-    console.verbose("媒体音量:" + device.getMusicVolume());
-    console.verbose("通知音量:" + device.getNotificationVolume());
-}
-
-// 判断电量
-function isBatteryLow() {
-    var battery = device.getBattery();
-    if (battery <= 30) {
-        return "🔴";
-    } else if (battery > 30 && battery <= 60) {
-        return "🟡";
-    } else if (battery > 60) {
-        return "🟢";
-    }
-}
-
-// 每日一言推送
-function sendOne() {
-    var res = http.get("https://timor.tech/api/holiday/tts/tomorrow", {
-        headers: { 'User-Agent': '' }
-    });
-    if (res.statusCode != 200) {
-        console.error("❌ 明天放假吗 获取失败");
+    if (!CONFIG.PACKAGE_ID_WHITE_LIST.includes(packageName)) {
         return;
-    } else {
-        var json = res.body.json();
-        if (json['code'] != 0) {
-            console.error("❌ 明天放假吗 获取失败");
-            return;
-        }
-        var text1 = "📢 " + json['tts'];
-        console.info(text1);
     }
 
-    var res = http.get("https://timor.tech/api/holiday/tts", {
-        headers: { 'User-Agent': '' }
-    });
-    if (res.statusCode != 200) {
-        console.error("❌ 距离今天最近的一个节假日安排 获取失败");
-        return;
-    } else {
-        var json = res.body.json();
-        if (json['code'] != 0) {
-            console.error("❌ 距离今天最近的一个节假日安排 获取失败");
-            return;
-        }
-        var text2 = "📢 " + json['tts'];
-        console.info(text2);
+    console.verbose("👇👇👇👇👇👇");
+    console.verbose("🔔 " + packageName);
+    console.verbose("🔔 " + title);
+    console.verbose("🔔 " + text);
+    console.verbose("👆👆👆👆👆👆");
+
+    if (text.indexOf("打卡·成功") !== -1) {
+        var battery = Utils.isBatteryLow() + " 剩余电量：" + device.getBattery() + "%";
+        var msg = "🔔 " + title.slice(title.indexOf(':') + 1) +
+            " " + Utils.getCurrentDate() + " " + Utils.getCurrentTime();
+
+        console.info(battery);
+        console.info(msg);
+        msg = "## " + battery + "\n## " + msg;
+
+        sendPushPlus("🎉 " + CONFIG.APP_NAME + " [打卡·成功]", msg);
+        killApp();
+        screen();
+        ui.finish();
+        // exit();
     }
-    return "\n- #### " + text1 + "\n- #### " + text2;
 }
 
-// 判断是否工作日
-function isWorkDay() {
-    var res = http.get("https://timor.tech/api/holiday/info/" + getCurrentDate(), {
-        headers: { 'User-Agent': '' }
-    });
-    if (res.statusCode != 200) {
-        console.error("❌ 判断是否工作日 获取失败");
-        return true;
-    } else {
-        var json = res.body.json();
-        if (json['code'] != 0) {
-            console.error("❌ 判断是否工作日 获取失败");
-            return true;
+// 主函数
+function main() {
+    try {
+        // 初始化
+        initializeApp();
+        console.verbose("======分割线===================================================");
+
+        // 唤醒设备
+        brightScreen();
+
+        // 随机等待避免检测
+        var waitTime = Utils.randomWait(CONFIG.WAIT_TIME.MIN, CONFIG.WAIT_TIME.MAX);
+        sleep(waitTime * 1000);
+
+        // 检查是否为工作日
+        console.verbose("工作日判定中 ...");
+        if (!isWorkingDay()) {
+            var battery = Utils.isBatteryLow() + " 剩余电量：" + device.getBattery() + "%";
+            var msg = "🌴 今日休息日，不执行打卡";
+            console.info(battery);
+            console.info(msg);
+            msg = "## " + battery + "\n## " + msg;
+            sendPushPlus("🚧 钉钉打卡 今日休息", msg);
+            screen();
+            ui.finish();
+            // exit();
         }
-        if (json['holiday'] == null) { // 非法定节假日
-            if (json['type']['week'] > 5) { // 星期天
-                return false;
-            }
-        } else { // 法定节假日
-            return false;
-        }
-        return true;
+
+        // 监听通知
+        console.verbose("监听打卡通知中 ...");
+        events.observeNotification();
+        events.onNotification(handleNotification);
+
+        // 执行打卡
+        clockIn();
+    } catch (error) {
+        console.error("❌ 程序执行出错：" + error);
+        sendPushPlus("❌ 钉钉打卡异常", "执行出错：" + error);
+        ui.finish();
+        // exit(error);
     }
 }
+
+// 启动脚本
+threads.start(function() {
+    if (pushplus_token.length != 0) {
+        main();
+    }
+});
