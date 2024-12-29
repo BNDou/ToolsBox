@@ -33,13 +33,14 @@ const Config_Path = "/sdcard/脚本/DingClockInLog/config.txt";
 var file;
 if (!files.exists(Config_Path)) {
     file = open(Config_Path, "w");
-    file.write(`{"screen_lock_key": "","pushplus_token": "","send_type": 0}`);
+    // file.write(`{"screen_lock_key": "","pushplus_token": "","send_type": 0}`);
+    file.write(`{"pushplus_token": "","send_type": 0}`);
     file.close();
 }
 file = open(Config_Path, "r");
 //读取token内容
 const data =  JSON.parse(file.read());
-var screen_lock_key = data["screen_lock_key"];
+// var screen_lock_key = data["screen_lock_key"];
 var pushplus_token = data["pushplus_token"];
 var send_type = data["send_type"];
 file.close();
@@ -50,8 +51,8 @@ ui.layout(
         <text textStyle="italic" textColor="red" gravity="right">By BNDou</text>
         <text margin="8">Android是一种基于Linux的自由及开放源代码的操作系统，主要使用于移动设备，如智能手机和平板电脑，由Google公司和开放手机联盟领导及开发。尚未有统一中文名称，中国大陆地区较多人使用“安卓”或“安致”。Android操作系统最初由Andy Rubin开发，主要支持手机。2005年8月由Google收购注资。2007年11月，Google与84家硬件制造商、软件开发商及电信营运商组建开放手机联盟共同研发改良Android系统。</text>
         <text autoLink="all" gravity="center">主页：https://github.com/BNDou</text>
-        <text text="锁屏密码(没有锁屏，可为空)" textColor="black" textSize="16sp" marginTop="16"/>
-        <input id="screen_lock_key" hint="请输入锁屏密码">{screen_lock_key}</input>
+        {/* <text text="锁屏密码(没有锁屏，可为空)" textColor="black" textSize="16sp" marginTop="16"/>
+        <input id="screen_lock_key" hint="请输入锁屏密码">{screen_lock_key}</input> */}
         <text text="PUSHPLUS推送token" textColor="black" textSize="16sp" marginTop="16"/>
         <input id="pushplus_token" hint="请输入PUSHPLUS_TOKEN">{pushplus_token}</input>
         <horizontal>
@@ -63,7 +64,7 @@ ui.layout(
 );
 ui.send_type.setSelection(send_type);
 ui.ok.click(() => {
-    screen_lock_key = ui.screen_lock_key.text();
+    // screen_lock_key = ui.screen_lock_key.text();
     pushplus_token = ui.pushplus_token.text();
     send_type = ui.send_type.getSelectedItemPosition();
     if (pushplus_token.length == 0) {
@@ -75,7 +76,8 @@ ui.ok.click(() => {
         return;
     }
     file = open(Config_Path, "w");
-    file.write(`{"screen_lock_key": "${screen_lock_key}","pushplus_token": "${pushplus_token}", "send_type": ${send_type}}`);
+    // file.write(`{"screen_lock_key": "${screen_lock_key}","pushplus_token": "${pushplus_token}", "send_type": ${send_type}}`);
+    file.write(`{"pushplus_token": "${pushplus_token}", "send_type": ${send_type}}`);
     file.close();
 });
 
@@ -264,15 +266,15 @@ function sendPushPlus(sendTitle, sendMsg) {
 function brightScreen() {
     console.verbose("唤醒设备");
     device.wakeUp();
-    sleep(2000);
+    sleep(3000);
     swipe(500, 1500, 500, 10, 1000);
     sleep(1000);
-    if (screen_lock_key.length > 0) {
-        for (var i = 0; i < screen_lock_key.length; i++) {
-        desc(screen_lock_key[i].toString()).findOne(3000).click();
-        sleep(234);
-        }
-    }
+    // if (screen_lock_key.length > 0) {
+    //     for (var i = 0; i < screen_lock_key.length; i++) {
+    //         desc(screen_lock_key[i].toString()).findOne(3000).click();
+    //         sleep(234);
+    //     }
+    // }
     device.keepScreenDim();
     device.setBrightnessMode(1);
     // device.setBrightness(1);
