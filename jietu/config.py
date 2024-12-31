@@ -15,8 +15,8 @@ class Config:
     """
     
     # Web服务器配置
-    # HOST = "127.0.0.1"  # 服务器监听地址，本地使用localhost
-    HOST = "192.168.31.120"  # 服务器监听地址，本地使用localhost
+    HOST = "127.0.0.1"  # 服务器监听地址，本地使用localhost
+    # HOST = "192.168.31.120"  # 服务器监听地址，本地使用localhost
     PORT = 27018        # 服务器端口号，避免与常用端口冲突
     DEBUG = False       # 调试模式开关，生产环境应设为False
 
