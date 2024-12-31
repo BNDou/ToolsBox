@@ -283,7 +283,7 @@ jietu/
 - ⚠️ 必须包含以下内容：
   - 原始版权声明
   - 原作者信息
-  - 项目源地址：[BNDou_jjietu](https://github.com/BNDou/ToolsBox/tree/main/jjietu)
+  - 项目源地址：[BNDou_jietu](https://github.com/BNDou/ToolsBox/tree/main/jietu)
   - 完整的源代码
   - 修改说明
   - GPL 3.0 许可证文本
