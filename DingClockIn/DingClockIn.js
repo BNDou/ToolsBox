@@ -303,10 +303,10 @@ function attendKaoqin() {
     console.verbose("正在进入考勤界面 ...");
     var url_scheme = "dingtalk://dingtalkclient/page/calendarHome?channel=calendarwidget";
     var a = app.intent({
+        flags: ["FLAG_ACTIVITY_NEW_TASK"],
+        action: "android.intent.action.VIEW",
+        data: url_scheme,
         packageName: CONFIG.PACKAGE_NAME,
-        flags: ["activity_new_task"],
-        action: "VIEW",
-        data: url_scheme
     });
     app.startActivity(a);
 

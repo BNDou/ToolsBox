@@ -1,0 +1,1126 @@
+<!--
+ * @Author: BNDou
+ * @Date: 2024-04-06 20:44:47
+ * @LastEditTime: 2024-12-31 20:45:21
+ * @FilePath: \ToolsBox\jietu\templates\index.html
+ * @Description: 
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能截图工具</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4CAF50;
+            --hover-color: #3e8e41;
+            --danger-color: #fd3e3e;
+            --bg-color: #f8f9fa;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .control-panel {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+        }
+
+        .form-select, .form-control {
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-select:focus, .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(76, 175, 80, 0.25);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--hover-color);
+            transform: translateY(-2px);
+        }
+
+        .image-preview {
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        .image-preview img {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .image-preview img:hover {
+            transform: scale(1.02);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        .loading-spinner {
+            width: 3rem;
+            height: 3rem;
+        }
+
+        /* 图片模态框样式 */
+        .image-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            z-index: 1000;
+            overflow: hidden;
+        }
+
+        .modal-content {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            user-select: none;
+            background: none;
+            border: none;
+        }
+
+        .modal-content img {
+            max-width: 90%;
+            max-height: 90vh;
+            object-fit: contain;
+            cursor: move;
+            transform-origin: center center;
+            transition: transform 0.1s ease;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .close-modal {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            color: #ff4444;
+            font-size: 35px;
+            cursor: pointer;
+            z-index: 1001;
+            background-color: rgba(255, 255, 255, 0.2);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .close-modal:hover {
+            color: #ff0000;
+            background-color: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        .zoom-controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 20px;
+            z-index: 1001;
+            display: flex;
+            gap: 5px;
+        }
+
+        .zoom-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .zoom-btn:hover {
+            background-color: var(--hover-color);
+        }
+
+        .zoom-btn.delete {
+            background-color: var(--danger-color);
+            margin-left: 10px;  /* 与其他按钮保持一定距离 */
+        }
+
+        .zoom-btn.delete:hover {
+            background-color: #ff0000;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 0.5rem;
+                padding: 1rem;
+            }
+
+            /* 优化下拉列表显示 */
+            .form-select {
+                max-width: 100%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .form-select option {
+                max-width: 100%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                padding: 8px;
+            }
+
+            /* 移动端优化样式 */
+            .image-preview img {
+                max-height: 70vh;
+                width: auto;
+            }
+
+            .modal-content img {
+                max-width: 98%;
+                max-height: 85vh;
+            }
+
+            /* 移动端历史记录样式优化 */
+            .history-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 1rem;
+            }
+
+            .history-item img {
+                height: 120px;
+            }
+
+            .history-item .info {
+                font-size: 0.8rem;
+                padding: 0.3rem;
+            }
+
+            .zoom-controls {
+                bottom: 10px;
+                padding: 5px;
+            }
+
+            .zoom-btn {
+                padding: 5px 10px;
+                margin: 0 3px;
+            }
+        }
+
+        /* 历史图片区域样式 */
+        .history-section {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 2px solid #eee;
+            display: none;  /* 默认隐藏 */
+        }
+
+        .history-title {
+            color: var(--primary-color);
+            margin-bottom: 2rem;
+            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 1rem;
+        }
+
+        .history-title .close-history {
+            color: var(--danger-color);
+            cursor: pointer;
+            font-size: 1.5rem;
+            transition: transform 0.3s ease;
+        }
+
+        .history-title .close-history:hover {
+            transform: scale(1.1);
+        }
+
+        /* 历史记录按钮样式 */
+        .history-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .history-btn:hover {
+            background-color: var(--hover-color);
+            transform: translateY(-2px);
+        }
+
+        .history-btn i {
+            font-size: 1.1rem;
+        }
+
+        .history-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.5rem;
+            padding: 1rem;
+        }
+
+        .history-item {
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+
+        .history-item:hover {
+            transform: scale(1.05);
+        }
+
+        .history-item img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+        }
+
+        .history-item .info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 0.5rem;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            font-size: 0.8rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .history-item:hover .info {
+            opacity: 1;
+        }
+
+        /* 加载动画样式 */
+        .history-loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--primary-color);
+        }
+
+        /* 加载状态样式优化 */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .loading-content {
+            text-align: center;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        /* 历史图片删除按钮样式 */
+        .history-item {
+            position: relative;
+        }
+
+        .delete-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 24px;
+            height: 24px;
+            background-color: rgba(255, 0, 0, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            z-index: 2;
+        }
+
+        .history-item:hover .delete-btn {
+            opacity: 1;
+        }
+
+        .delete-btn:hover {
+            transform: scale(1.1);
+            background-color: rgba(255, 0, 0, 1);
+        }
+
+        /* 删除确认弹窗样式 */
+        .confirm-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(3px);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .confirm-content {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .confirm-title {
+            color: var(--danger-color);
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .confirm-message {
+            color: #666;
+            margin-bottom: 1.5rem;
+        }
+
+        .confirm-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .confirm-btn {
+            padding: 0.5rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .confirm-btn.cancel {
+            background-color: #f0f0f0;
+            color: #666;
+        }
+
+        .confirm-btn.confirm {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .confirm-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .confirm-btn.cancel:hover {
+            background-color: #e0e0e0;
+        }
+
+        .confirm-btn.confirm:hover {
+            background-color: #ff0000;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="loading-overlay">
+        <div class="loading-content">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">加载中...</span>
+            </div>
+            <div class="mt-2">处理中...</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>智能截图工具</h1>
+            <p class="text-muted">选择窗口或全屏进行截图</p>
+        </div>
+
+        <div class="control-panel">
+            <form id="screenshot-form" class="row g-3">
+                <div class="col-md-6">
+                    <label for="hwnd-list" class="form-label">选择窗口</label>
+                    <select id="hwnd-list" name="hwnd-list" class="form-select">
+                        <option value="">全屏截图</option>
+                        {% for hwnd,title in hwnd_map.items() %}
+                        <option value="{{ hwnd }}">{{ title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label for="format" class="form-label">图片格式</label>
+                    <select id="format" name="format" class="form-select">
+                        <option value="PNG">PNG</option>
+                        <option value="JPEG">JPEG</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label for="quality" class="form-label">图片质量</label>
+                    <input type="range" class="form-range" id="quality" name="quality" min="1" max="100" value="100">
+                    <span id="quality-value" class="form-text">100%</span>
+                </div>
+
+                <div class="col-12 text-center">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-camera"></i> 开始截图
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="loading">
+            <div class="spinner-border loading-spinner text-primary" role="status">
+                <span class="visually-hidden">加载中...</span>
+            </div>
+        </div>
+
+        <div class="image-preview" id="image-preview">
+            {% if img_base64 %}
+            <img src="data:image/png;base64,{{ img_base64 }}" alt="截图预览" class="img-fluid preview-image">
+            {% endif %}
+        </div>
+
+        <!-- 添加历史记录按钮 -->
+        <div class="text-center">
+            <button class="history-btn" id="showHistory">
+                <i class="fas fa-history"></i>
+                查看历史截图
+            </button>
+        </div>
+
+        <div class="history-section">
+            <h2 class="history-title">
+                历史截图
+                <span class="close-history">&times;</span>
+            </h2>
+            <div class="history-loading">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">加载中...</span>
+                </div>
+            </div>
+            <div class="history-grid" id="historyGrid"></div>
+        </div>
+    </div>
+
+    <!-- 图片查看模态框 -->
+    <div id="imageModal" class="image-modal">
+        <span class="close-modal">&times;</span>
+        <div class="modal-content">
+            <img id="modalImage" src="" alt="放大图片">
+        </div>
+        <div class="zoom-controls">
+            <button class="zoom-btn" id="zoomOut"><i class="fas fa-search-minus"></i></button>
+            <button class="zoom-btn" id="zoomReset"><i class="fas fa-undo"></i></button>
+            <button class="zoom-btn" id="zoomIn"><i class="fas fa-search-plus"></i></button>
+            <button class="zoom-btn delete" id="modalDelete"><i class="fas fa-trash-alt"></i></button>
+        </div>
+    </div>
+
+    <!-- 删除确认弹窗 -->
+    <div class="confirm-modal" id="deleteConfirmModal">
+        <div class="confirm-content">
+            <div class="confirm-title">
+                <i class="fas fa-exclamation-triangle"></i> 确认删除
+            </div>
+            <div class="confirm-message">
+                确定要删除这张截图吗？此操作无法撤销。
+            </div>
+            <div class="confirm-buttons">
+                <button class="confirm-btn cancel" id="cancelDelete">取消</button>
+                <button class="confirm-btn confirm" id="confirmDelete">删除</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            let currentZoom = 1;
+            const zoomStep = 0.1;
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            let isDragging = false;
+            let startX, startY, translateX = 0, translateY = 0;
+            let lastX = 0, lastY = 0;
+
+            // 更新质量值显示
+            $('#quality').on('input', function() {
+                $('#quality-value').text($(this).val() + '%');
+            });
+
+            // 优化加载状态显示
+            function showLoading() {
+                $('.loading-overlay').css('display', 'flex');
+                $('body').css('overflow', 'hidden');
+            }
+
+            function hideLoading() {
+                $('.loading-overlay').hide();
+                $('body').css('overflow', '');
+            }
+
+            // 优化图片加载
+            function loadImage(src) {
+                return new Promise((resolve, reject) => {
+                    const img = new Image();
+                    img.onload = () => resolve(img);
+                    img.onerror = reject;
+                    img.src = src;
+                });
+            }
+
+            // 修改表单提交处理
+            $('#screenshot-form').on('submit', function(e) {
+                e.preventDefault();
+                showLoading();
+                
+                $.ajax({
+                    url: '/get_data',
+                    method: 'POST',
+                    data: $(this).serialize(),
+                    success: async function(response) {
+                        if (response.status === 'success') {
+                            try {
+                                // 等待图片加载完成
+                                const imgSrc = `data:image/png;base64,${response.image}`;
+                                await loadImage(imgSrc);
+                                
+                                $('#image-preview').html(
+                                    `<img src="${imgSrc}" alt="截图预览" class="img-fluid preview-image">`
+                                );
+                                bindImageClickEvent();
+                                toastr.success('截图成功！');
+                                
+                                // 如果历史记录区域是打开的，刷新历史记录
+                                if ($('.history-section').is(':visible')) {
+                                    loadHistory();
+                                }
+                            } catch (err) {
+                                toastr.error('图片加载失败');
+                            }
+                        } else {
+                            toastr.error(response.message || '截图失败');
+                        }
+                    },
+                    error: function() {
+                        toastr.error('服务器错误，请稍后重试');
+                    },
+                    complete: function() {
+                        hideLoading();
+                    }
+                });
+            });
+
+            // 图片拖动功能
+            modalImg.addEventListener('mousedown', startDragging);
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('mouseup', stopDragging);
+            
+            // 触摸设备支持
+            modalImg.addEventListener('touchstart', startDragging);
+            document.addEventListener('touchmove', drag);
+            document.addEventListener('touchend', stopDragging);
+
+            function startDragging(e) {
+                if (currentZoom <= 1) return;
+                
+                isDragging = true;
+                if (e.type === 'mousedown') {
+                    startX = e.clientX - translateX;
+                    startY = e.clientY - translateY;
+                } else if (e.type === 'touchstart') {
+                    startX = e.touches[0].clientX - translateX;
+                    startY = e.touches[0].clientY - translateY;
+                }
+                modalImg.style.transition = 'none';
+            }
+
+            function drag(e) {
+                if (!isDragging) return;
+                e.preventDefault();
+
+                let clientX, clientY;
+                if (e.type === 'mousemove') {
+                    clientX = e.clientX;
+                    clientY = e.clientY;
+                } else if (e.type === 'touchmove') {
+                    clientX = e.touches[0].clientX;
+                    clientY = e.touches[0].clientY;
+                }
+
+                translateX = clientX - startX;
+                translateY = clientY - startY;
+
+                // 限制拖动范围
+                const maxTranslateX = (modalImg.offsetWidth * currentZoom - modalImg.offsetWidth) / 2;
+                const maxTranslateY = (modalImg.offsetHeight * currentZoom - modalImg.offsetHeight) / 2;
+
+                translateX = Math.min(Math.max(translateX, -maxTranslateX), maxTranslateX);
+                translateY = Math.min(Math.max(translateY, -maxTranslateY), maxTranslateY);
+
+                updateTransform();
+            }
+
+            function stopDragging() {
+                isDragging = false;
+                lastX = translateX;
+                lastY = translateY;
+                modalImg.style.transition = 'transform 0.1s ease';
+            }
+
+            function updateTransform() {
+                modalImg.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentZoom})`;
+            }
+
+            // 修改缩放控制
+            $('#zoomIn').click(function() {
+                currentZoom += zoomStep;
+                updateTransform();
+            });
+
+            $('#zoomOut').click(function() {
+                if (currentZoom > 1) {
+                    currentZoom -= zoomStep;
+                    if (currentZoom < 1) currentZoom = 1;
+                    
+                    // 重置位置
+                    if (currentZoom === 1) {
+                        translateX = 0;
+                        translateY = 0;
+                    }
+                    updateTransform();
+                }
+            });
+
+            $('#zoomReset').click(function() {
+                currentZoom = 1;
+                translateX = 0;
+                translateY = 0;
+                updateTransform();
+            });
+
+            // 修改图片点击事件
+            function bindImageClickEvent() {
+                $('.preview-image').off('click').on('click', function() {
+                    modal.style.display = "block";
+                    modalImg.src = this.src;
+                    $(modalImg).data('filename', this.alt);  // 保存文件名到图片元素
+                    currentZoom = 1;
+                    translateX = 0;
+                    translateY = 0;
+                    updateTransform();
+                    document.body.style.overflow = 'hidden';
+                });
+            }
+            bindImageClickEvent();
+
+            // 关闭模态框时重置状态
+            function resetModalState() {
+                modal.style.display = "none";
+                currentZoom = 1;
+                translateX = 0;
+                translateY = 0;
+                updateTransform();
+                document.body.style.overflow = '';
+            }
+
+            // 点击背景或关闭按钮时关闭模态框
+            $('.image-modal .modal-content').click(function(e) {
+                if (e.target === this) {
+                    resetModalState();
+                }
+            });
+
+            $('.close-modal').click(function() {
+                resetModalState();
+            });
+
+            // 防止图片区域的点击事件冒泡
+            $('#modalImage').click(function(e) {
+                e.stopPropagation();
+            });
+
+            // 防止缩放控制按钮的点击事件冒泡
+            $('.zoom-controls').click(function(e) {
+                e.stopPropagation();
+            });
+
+            // 修改键盘事件
+            $(document).keydown(function(e) {
+                if (modal.style.display === "block") {
+                    const moveStep = 50;
+                    switch(e.key) {
+                        case "Escape":
+                            resetModalState();
+                            break;
+                        case "+":
+                        case "=":
+                            currentZoom += zoomStep;
+                            updateTransform();
+                            break;
+                        case "-":
+                            if (currentZoom > 1) {
+                                currentZoom -= zoomStep;
+                                if (currentZoom < 1) {
+                                    currentZoom = 1;
+                                    translateX = 0;
+                                    translateY = 0;
+                                }
+                                updateTransform();
+                            }
+                            break;
+                        case "0":
+                            currentZoom = 1;
+                            translateX = 0;
+                            translateY = 0;
+                            updateTransform();
+                            break;
+                        case "ArrowLeft":
+                            if (currentZoom > 1) {
+                                translateX += moveStep;
+                                updateTransform();
+                            }
+                            break;
+                        case "ArrowRight":
+                            if (currentZoom > 1) {
+                                translateX -= moveStep;
+                                updateTransform();
+                            }
+                            break;
+                        case "ArrowUp":
+                            if (currentZoom > 1) {
+                                translateY += moveStep;
+                                updateTransform();
+                            }
+                            break;
+                        case "ArrowDown":
+                            if (currentZoom > 1) {
+                                translateY -= moveStep;
+                                updateTransform();
+                            }
+                            break;
+                    }
+                }
+            });
+
+            // 添加鼠标滚轮缩放支持
+            modalImg.addEventListener('wheel', function(e) {
+                e.preventDefault();
+                if (e.deltaY < 0) {
+                    currentZoom += zoomStep;
+                } else {
+                    if (currentZoom > 1) {
+                        currentZoom -= zoomStep;
+                        if (currentZoom < 1) {
+                            currentZoom = 1;
+                            translateX = 0;
+                            translateY = 0;
+                        }
+                    }
+                }
+                updateTransform();
+            });
+
+            // 配置toastr通知
+            toastr.options = {
+                closeButton: true,
+                progressBar: true,
+                positionClass: "toast-top-right",
+                timeOut: 3000
+            };
+
+            // 修改历史记录按钮事件
+            $('#showHistory').on('click', function() {
+                $(this).prop('disabled', true);
+                $('.history-section').slideDown({
+                    complete: function() {
+                        $('.history-loading').show();  // 显示加载动画
+                        $('#historyGrid').empty();     // 清空历史网格
+                        loadHistory();
+                        $('#showHistory').hide().prop('disabled', false);
+                    }
+                });
+            });
+
+            // 优化历史记录加载
+            function loadHistory() {
+                showLoading();
+                $('#historyGrid').empty();
+                $('.history-loading').show();  // 确保加载动画显示
+                
+                $.ajax({
+                    url: '/get_history',
+                    method: 'GET',
+                    success: async function(response) {
+                        if (response.status === 'success') {
+                            if (response.screenshots.length === 0) {
+                                $('.history-loading').hide();  // 隐藏加载动画
+                                $('#historyGrid').html('<div class="text-center text-muted">暂无历史截图</div>');
+                            } else {
+                                try {
+                                    // 分批加载图片
+                                    const batchSize = 5;
+                                    for (let i = 0; i < response.screenshots.length; i += batchSize) {
+                                        const batch = response.screenshots.slice(i, i + batchSize);
+                                        for (const screenshot of batch) {
+                                            try {
+                                                await loadImage(`data:image/png;base64,${screenshot.image}`);
+                                                const historyItem = $(`
+                                                    <div class="history-item">
+                                                        <button class="delete-btn" data-filename="${screenshot.filename}">×</button>
+                                                        <img src="data:image/png;base64,${screenshot.image}" 
+                                                             alt="${screenshot.filename}"
+                                                             class="preview-image">
+                                                        <div class="info">
+                                                            <div>${screenshot.create_time}</div>
+                                                        </div>
+                                                    </div>
+                                                `);
+                                                $('#historyGrid').append(historyItem);
+                                            } catch (err) {
+                                                console.error('Failed to load image:', err);
+                                            }
+                                        }
+                                        await new Promise(resolve => setTimeout(resolve, 100));
+                                    }
+                                    bindImageClickEvent();
+                                } finally {
+                                    $('.history-loading').hide();  // 确保加载动画隐藏
+                                }
+                            }
+                        } else {
+                            $('.history-loading').hide();  // 隐藏加载动画
+                            toastr.error(response.message || '加载历史记录失败');
+                        }
+                    },
+                    error: function() {
+                        $('.history-loading').hide();  // 隐藏加载动画
+                        toastr.error('服务器错误，请稍后重试');
+                    },
+                    complete: function() {
+                        hideLoading();
+                        $('.history-loading').hide();  // 确保加载动画隐藏
+                    }
+                });
+            }
+
+            // 修改历史记录关闭按钮事件
+            $('.close-history').on('click', function() {
+                $('.history-section').slideUp({
+                    complete: function() {
+                        $('#showHistory').show();
+                        $('#historyGrid').empty();      // 清空历史记录内容
+                        $('.history-loading').hide();   // 隐藏加载动画
+                    }
+                });
+            });
+
+            // 修改窗口列表显示
+            function truncateWindowTitle(title, maxLength = 50) {
+                return title.length > maxLength ? title.substring(0, maxLength) + '...' : title;
+            }
+
+            // 处理窗口标题
+            $('#hwnd-list option').each(function() {
+                const title = $(this).text();
+                $(this).text(truncateWindowTitle(title));
+            });
+
+            // 删除确认弹窗功能
+            let currentDeleteCallback = null;
+            const deleteConfirmModal = $('#deleteConfirmModal');
+
+            function showDeleteConfirm(callback) {
+                currentDeleteCallback = callback;
+                deleteConfirmModal.css('display', 'flex').hide().fadeIn(200);
+            }
+
+            function hideDeleteConfirm() {
+                deleteConfirmModal.fadeOut(200);
+                currentDeleteCallback = null;
+            }
+
+            // 取消删除
+            $('#cancelDelete').click(function() {
+                hideDeleteConfirm();
+            });
+
+            // 确认删除
+            $('#confirmDelete').click(function() {
+                if (currentDeleteCallback) {
+                    currentDeleteCallback();
+                }
+                hideDeleteConfirm();
+            });
+
+            // 点击背景关闭弹窗
+            deleteConfirmModal.click(function(e) {
+                if (e.target === this) {
+                    hideDeleteConfirm();
+                }
+            });
+
+            // 修改历史记录删除按钮事件
+            $(document).on('click', '.delete-btn', function(e) {
+                e.stopPropagation();
+                const filename = $(this).data('filename');
+                const $historyItem = $(this).closest('.history-item');
+                
+                showDeleteConfirm(function() {
+                    $.ajax({
+                        url: '/delete_screenshot',
+                        method: 'POST',
+                        data: { filename: filename },
+                        success: function(response) {
+                            if (response.status === 'success') {
+                                $historyItem.fadeOut(300, function() {
+                                    $(this).remove();
+                                    if ($('#historyGrid').children().length === 0) {
+                                        $('#historyGrid').html('<div class="text-center text-muted">暂无历史截图</div>');
+                                    }
+                                });
+                                toastr.success('删除成功');
+                            } else {
+                                toastr.error(response.message || '删除失败');
+                            }
+                        },
+                        error: function() {
+                            toastr.error('服务器错误，请稍后重试');
+                        }
+                    });
+                });
+            });
+
+            // 修改模态框删除按钮事件
+            $('#modalDelete').on('click', function(e) {
+                e.stopPropagation();
+                const currentImage = $('#modalImage');
+                const filename = currentImage.data('filename');
+                
+                showDeleteConfirm(function() {
+                    $.ajax({
+                        url: '/delete_screenshot',
+                        method: 'POST',
+                        data: { filename: filename },
+                        success: function(response) {
+                            if (response.status === 'success') {
+                                resetModalState();
+                                $(`.history-item img[alt="${filename}"]`).closest('.history-item').fadeOut(300, function() {
+                                    $(this).remove();
+                                    if ($('#historyGrid').children().length === 0) {
+                                        $('#historyGrid').html('<div class="text-center text-muted">暂无历史截图</div>');
+                                    }
+                                });
+                                toastr.success('删除成功');
+                            } else {
+                                toastr.error(response.message || '删除失败');
+                            }
+                        },
+                        error: function() {
+                            toastr.error('服务器错误，请稍后重试');
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>
